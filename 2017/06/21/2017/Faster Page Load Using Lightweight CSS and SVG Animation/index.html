@@ -1,0 +1,720 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1" />
+
+
+
+
+
+
+<meta name="description" content="原文  这不是一篇完全的翻译文， 而是看过原文之后，加入自己的理解的翻译文:D 原文首先讲了web页面的动画是多么的棒。但是呢，一般的web动画工具，都需要javascript的动画库和图片文件。这就导致了用户要花宝贵的时间在等待资源的加载上。如果想要给自己的主页加上一个非常吸引人的动画，那应该要保证页面加载时间在2s内。那么有什么轻量级的解决方案既不会损害网站性能同时也不会降低用户体验呢？其中">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Faster Page Load Using Lightweight CSS and SVG Animation (Without JavaScript)">
+<meta property="og:url" content="http://rhain.me/2017/06/21/2017/Faster Page Load Using Lightweight CSS and SVG Animation/index.html">
+<meta property="og:site_name" content="Rhain&#39;s blog">
+<meta property="og:description" content="原文  这不是一篇完全的翻译文， 而是看过原文之后，加入自己的理解的翻译文:D 原文首先讲了web页面的动画是多么的棒。但是呢，一般的web动画工具，都需要javascript的动画库和图片文件。这就导致了用户要花宝贵的时间在等待资源的加载上。如果想要给自己的主页加上一个非常吸引人的动画，那应该要保证页面加载时间在2s内。那么有什么轻量级的解决方案既不会损害网站性能同时也不会降低用户体验呢？其中">
+<meta property="og:image" content="http://rhain.me/images/2017/svg-animation/raygun.gif">
+<meta property="og:updated_time" content="2017-06-28T07:34:17.108Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Faster Page Load Using Lightweight CSS and SVG Animation (Without JavaScript)">
+<meta name="twitter:description" content="原文  这不是一篇完全的翻译文， 而是看过原文之后，加入自己的理解的翻译文:D 原文首先讲了web页面的动画是多么的棒。但是呢，一般的web动画工具，都需要javascript的动画库和图片文件。这就导致了用户要花宝贵的时间在等待资源的加载上。如果想要给自己的主页加上一个非常吸引人的动画，那应该要保证页面加载时间在2s内。那么有什么轻量级的解决方案既不会损害网站性能同时也不会降低用户体验呢？其中">
+<meta name="twitter:image" content="http://rhain.me/images/2017/svg-animation/raygun.gif">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://rhain.me/2017/06/21/2017/Faster Page Load Using Lightweight CSS and SVG Animation/"/>
+
+
+
+
+
+  <title>Faster Page Load Using Lightweight CSS and SVG Animation (Without JavaScript) | Rhain's blog</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Rhain's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">rhain 的私语</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://rhain.me/2017/06/21/2017/Faster Page Load Using Lightweight CSS and SVG Animation/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="rhain">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Rhain's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Faster Page Load Using Lightweight CSS and SVG Animation (Without JavaScript)</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-06-21T08:59:54+08:00">
+                2017-06-21
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <blockquote>
+<p><a href="https://dzone.com/articles/faster-page-load-using-lightweight-css-and-svg-ani" target="_blank" rel="external">原文</a></p>
+</blockquote>
+<p>这不是一篇完全的翻译文， 而是看过原文之后，加入自己的理解的翻译文:D</p>
+<p>原文首先讲了web页面的动画是多么的棒。但是呢，一般的web动画工具，都需要javascript的动画库和图片文件。这就导致了用户要花宝贵的时间在等待<br>资源的加载上。如果想要给自己的主页加上一个非常吸引人的动画，那应该要保证页面加载时间在2s内。那么有什么轻量级的解决方案既不会损害网站性能<br>同时也不会降低用户体验呢？其中一个的解决方案那就是使用css和svg动画，不需要javascript的参与！</p>
+<h4 id="行内svg的css动画优缺点"><a href="#行内svg的css动画优缺点" class="headerlink" title="行内svg的css动画优缺点"></a>行内svg的css动画优缺点</h4><h5 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h5><ul>
+<li>svg图片是行内元素，那就意味着没有额外的文件请求</li>
+<li>通过css来实现动画，那就不需要额外的javascript动画文件</li>
+<li>少量的代码</li>
+</ul>
+<h5 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h5><ul>
+<li>需要详细拆解动画。不是导出svg动画就能实现了，必须预先想好哪些形状需要分组，同时每个形状的动画时间，间隔都需要想好。</li>
+<li>比较繁琐。需要手动给路径添加class，如果需要改变源图片，那么又需要重新添加一次class</li>
+<li>IE 不支持svg动画。可以使用静态图片代替。</li>
+</ul>
+<p>虽然看起来是有点繁琐，但是相对于它的好处，还是值得的。</p>
+<p>下图的动画看看使用svg + css如何来实现：</p>
+<p><img src="/images/2017/svg-animation/raygun.gif" alt=""></p>
+<p>svg动画最复杂的部分应该是为了实现动画如何把svg图片中路径归组、分类导出。这就需要把动画拆解了，再根据拆解的动画，把svg的path分组或者单独来处理。</p>
+<p>现在来拆解上图的动画。</p>
+<ul>
+<li><p>动画都是一个整体在运动，不管进场出场，还是缩放。这就可以把所有的path包含在一个group里面，这样就可以操作整个svg对象了。</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">&lt;g class="artwork" id="artwork" data-name="artwork"&gt;</div><div class="line">&lt;/g&gt;</div></pre></td></tr></table></figure>
+</li>
+<li><p>枪的旋转和移动相对于射出的光线和发射时的光束是独立，因此我们可以把抢的部分归到一个group里面</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">&lt;g class="raygun" id="raygun"&gt;</div><div class="line">&lt;/g&gt;</div><div class="line">&lt;g id="beam"&gt;</div><div class="line">&lt;/g&gt;</div></pre></td></tr></table></figure>
+</li>
+<li><p>枪身上的闪光，可以使用蒙板来实现，闪光需要跟枪一起运动，所以把闪光这层放在raygun group里面。 需要注意的闪光是位于底部和枪表面中间。</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">&lt;g class="raygun" id="raygun"&gt;</div><div class="line">    &lt;g id="gun-background"&gt;</div><div class="line">    &lt;/g&gt;</div><div class="line">    &lt;g id="mask-shine"&gt;</div><div class="line">        &lt;g style="clip-path: url(#clip-path)"&gt;</div><div class="line">            &lt;polygon class="sheen" id="sheen" points="392 188 184 188 407 412 616 412 392 188" style="fill: #fff"/&gt;</div><div class="line">        &lt;/g&gt;</div><div class="line">    &lt;/g&gt;</div><div class="line">    &lt;g id="fin-foreground"&gt;</div><div class="line">    &lt;/g&gt;</div><div class="line">&lt;/g&gt;</div></pre></td></tr></table></figure>
+</li>
+<li><p>使用css 的<code>stroke-dasharray</code> 和 <code>stroke-offset</code> 来实现发射时的光束效果。</p>
+</li>
+</ul>
+<p>最后从AI里面导出svg文件，再复制svg的内容到html页面中，为需要操作path或者group加上class。这样就可以开始我们的css 动画了。</p>
+<p>在实现动画的方式上，我们有两种选择：</p>
+<ol>
+<li>每个动画单独处理分为多个animation， 动画的衔接通过 animation-delay 来实现。</li>
+<li>所有动画都在一个animation里面，每个动画在某一段时间内处理。</li>
+</ol>
+<p>原文作者选择了第二种方式，原因是可以通过一个变量控制整个动画时间。 当然这种方式也有相应的缺点，就是在使用easing function的时候只能使用<br>1个，不能为每个动画使用单独的easing function。</p>
+<p>下面我们来看下每个动画的实现：</p>
+<ol>
+<li><p>首先是整体的动画：</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div></pre></td><td class="code"><pre><div class="line"><span class="selector-class">.artwork</span>&#123;</div><div class="line">    <span class="attribute">transform-origin</span>: <span class="number">0</span>;</div><div class="line">    <span class="attribute">animation</span>: artwork <span class="number">4000ms</span> ease-in-out infinite;</div><div class="line">&#125;</div><div class="line"></div><div class="line">@<span class="keyword">keyframes</span> artwork &#123;</div><div class="line">    0%&#123; <span class="comment">/* 首先位于可视区域下方 */</span></div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">translateY</span>(800px);</div><div class="line">    &#125;</div><div class="line">    15%&#123; <span class="comment">/* 0-600ms时，从下方移动到了初始位置 */</span></div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">translateY</span>(0);</div><div class="line">    &#125;</div><div class="line">    20%&#123; <span class="comment">/* 600ms-800ms 保持不变 */</span></div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">translateY</span>(0);</div><div class="line">    &#125;</div><div class="line">    50%&#123; <span class="comment">/* 800ms-2000ms 原样保持不变 */</span></div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">scale</span>(1) <span class="built_in">translateX</span>(0);</div><div class="line">    &#125;</div><div class="line">    52%&#123; <span class="comment">/* 2000ms-2080ms 缩小至原来0.6倍 向上移动120px 模拟枪发射后 后退的效果 */</span></div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">scale</span>(0.6) <span class="built_in">translate</span>(0, -120px);</div><div class="line">    &#125;</div><div class="line">    60%&#123; <span class="comment">/* 2080ms-2400ms 向前移动80px 向上移动20px 模拟枪后退恢复原位的效果 */</span></div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">scale</span>(0.6) <span class="built_in">translate</span>(80px, -140px);</div><div class="line">    &#125;</div><div class="line">    70%&#123; <span class="comment">/* 2400ms-2800ms 想下移动20px 模拟枪后退恢复原位的效果 */</span></div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">scale</span>(0.6) <span class="built_in">translate</span>(80px, -120px);</div><div class="line">    &#125;</div><div class="line">    80%,100%&#123; <span class="comment">/* 2800ms-3200ms 向上移动680px 移出到视线外 */</span></div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">scale</span>(0.6) <span class="built_in">translate</span>(80px, -800px);</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p>raygun的动画， 需要有旋转和跳跃的效果。</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div></pre></td><td class="code"><pre><div class="line"><span class="selector-class">.raygun</span>&#123;</div><div class="line">    <span class="attribute">transform-origin</span>: center;</div><div class="line">    <span class="attribute">animation</span>: raygun <span class="number">4000ms</span> ease-in-out infinite;</div><div class="line">&#125;</div><div class="line"></div><div class="line">@<span class="keyword">keyframes</span> raygun &#123;</div><div class="line">    0%&#123; <span class="comment">/* 旋转40度 */</span></div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">rotate</span>(40deg);</div><div class="line">    &#125;</div><div class="line">    15%&#123; <span class="comment">/* 0-600ms 旋转奥-16度 此时raygun 已经从下方移动到了初始位置了 */</span></div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">rotate</span>(-16deg);</div><div class="line">    &#125;</div><div class="line">    25%&#123; <span class="comment">/* 600ms-1000ms 旋转到8度，raygun还在原始位置*/</span></div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">rotate</span>(8deg);</div><div class="line">    &#125;</div><div class="line">    30%&#123; <span class="comment">/* 1000ms-1200ms 旋转到-2度*/</span></div><div class="line">      <span class="attribute">transform</span>: <span class="built_in">rotate</span>(-2deg);</div><div class="line">    &#125;</div><div class="line">    32%,</div><div class="line">    36%,</div><div class="line">    40%,</div><div class="line">    44%,</div><div class="line">    48% &#123;</div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">rotate</span>(-0.5deg);</div><div class="line">    &#125;</div><div class="line">    34%,</div><div class="line">    38%,</div><div class="line">    42%,</div><div class="line">    46%,</div><div class="line">    50% &#123; <span class="comment">/* 从1200ms 到 2000ms 这段时间内每隔80ms 交替旋转0.5度和-0.5度 模拟一个蓄力的效果 */</span></div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">rotate</span>(0.5deg);</div><div class="line">    &#125;</div><div class="line">    50%&#123; <span class="comment">/* 2000ms 旋转到初始位置 */</span></div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">rotate</span>(0);</div><div class="line">    &#125;</div><div class="line">    52%&#123; <span class="comment">/* 2000ms-2080ms 旋转-16度，此时raygun发射后往后退。 */</span></div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">rotate</span>(-16deg);</div><div class="line">    &#125;</div><div class="line">    60%&#123; <span class="comment">/* 2080ms-2400ms 旋转到12度， 此时raygun向前同时向上运动*/</span></div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">rotate</span>(12deg);</div><div class="line">    &#125;</div><div class="line">    80%, 100%&#123; <span class="comment">/* 2400ms-3200ms 旋转到-12度，保持到结束*/</span></div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">rotate</span>(-12deg);</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p>枪扳手的动画：</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="selector-class">.gun-trigger</span>&#123;</div><div class="line">    <span class="attribute">transform-origin</span>: center <span class="number">20%</span>;</div><div class="line">    <span class="attribute">animation</span>: gun-trigger <span class="number">4000ms</span> ease-in-out infinite;</div><div class="line">&#125;</div><div class="line">@<span class="keyword">keyframes</span> gun-trigger &#123;</div><div class="line">    0%,30%&#123; <span class="comment">/* 需要在枪蓄力的过程中有一个扳动的效果。其他的时间保持初始状态 */</span></div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">rotate</span>(0);</div><div class="line">    &#125;</div><div class="line">    46%&#123; <span class="comment">/* 1200ms-1840ms 旋转32度 模拟扳手往后扣动的效果 */</span></div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">rotate</span>(32deg);</div><div class="line">    &#125;</div><div class="line">    48%,100%&#123; <span class="comment">/*1840ms-1920ms 旋转到初始位置，发射完后回归*/</span></div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">rotate</span>(0);</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p>枪身的闪光动画，使用了svg的蒙板来实现：</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="selector-class">.sheen</span>&#123;</div><div class="line">    <span class="attribute">animation</span>: sheen <span class="number">4000ms</span> ease-in-out infinite;</div><div class="line">&#125;</div><div class="line"></div><div class="line">@<span class="keyword">keyframes</span> sheen &#123;</div><div class="line">    0%,25%&#123; <span class="comment">/* 0-1000ms还处于视野外 */</span></div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">translateX</span>(-320px);</div><div class="line">    &#125;</div><div class="line">    40%,55%&#123; <span class="comment">/* 1000ms-1600ms的时候，开枪前 闪光从左至右 1600ms-2200ms 保持不动 */</span></div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">translateX</span>(320px);</div><div class="line">    &#125;</div><div class="line">    70%,100%&#123; <span class="comment">/* 2200ms-2800ms 开枪后 闪光从右至左， 2800ms-4000ms 保持不动 */</span></div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">translateX</span>(-320px);</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p>枪聚能的光环动画：</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line"><span class="selector-class">.gun-charge</span>&#123;</div><div class="line">    <span class="attribute">transform-origin</span>: center;</div><div class="line">    <span class="attribute">animation</span>: gun-charge <span class="number">4000ms</span> ease-in-out infinite;</div><div class="line">&#125;</div><div class="line">@<span class="keyword">keyframes</span> gun-charge &#123;</div><div class="line">    0%,20%&#123; <span class="comment">/* 先隐藏 */</span></div><div class="line">        <span class="attribute">opacity</span>: <span class="number">0</span>;</div><div class="line">        <span class="attribute">fill</span>: <span class="number">#4193f2</span>;</div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">scale</span>(1);</div><div class="line">    &#125;</div><div class="line">    45%&#123; <span class="comment">/* 800ms-1800ms聚能光变大同时透明度增加 发射前 */</span></div><div class="line">        <span class="attribute">opacity</span>: <span class="number">0.5</span>;</div><div class="line">        <span class="attribute">fill</span>: <span class="number">#4193f2</span>;</div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">scale</span>(0.9);</div><div class="line">    &#125;</div><div class="line">    50%,100%&#123; <span class="comment">/* 发射后聚能光变白，同时缩小消失 */</span></div><div class="line">        <span class="attribute">opacity</span>: <span class="number">1</span>;</div><div class="line">        <span class="attribute">fill</span>: white;</div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">scale</span>(0);</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p>发射后散光效果：</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line">@<span class="keyword">keyframes</span> line &#123;</div><div class="line">    0%,49%&#123; <span class="comment">/* 发射前都是不可见的*/</span></div><div class="line">        <span class="attribute">stroke</span>: transparent;</div><div class="line">        <span class="attribute">stroke-dashoffset</span>: <span class="number">0</span>;</div><div class="line">        <span class="attribute">stroke-dasharray</span>: <span class="number">5</span>,<span class="number">200</span>;</div><div class="line">    &#125;</div><div class="line">    50%&#123; <span class="comment">/* 发射后可见*/</span></div><div class="line">        <span class="attribute">stroke</span>: white;</div><div class="line">    &#125;</div><div class="line">    55%&#123; <span class="comment">/* 发射后散光扩散，需要注意要实现从内往外扩散的效果 stroke-dashoffset的值设置的负值，会向初始的方向反方向运动 */</span></div><div class="line">        <span class="attribute">stroke-dashoffset</span>: -<span class="number">80px</span>;</div><div class="line">        <span class="attribute">stroke-dasharray</span>: <span class="number">20</span>,<span class="number">200</span>;</div><div class="line">        <span class="attribute">stroke</span>: white;</div><div class="line">    &#125;</div><div class="line">    60%,100%&#123;</div><div class="line">        <span class="attribute">stroke-dashoffset</span>: -<span class="number">120px</span>;</div><div class="line">        <span class="attribute">stroke-dasharray</span>: <span class="number">5</span>, <span class="number">200</span>;</div><div class="line">        <span class="attribute">stroke</span>: transparent;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p>发射的激光效果：</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div></pre></td><td class="code"><pre><div class="line"><span class="selector-class">.beam-white</span>&#123;</div><div class="line">    <span class="attribute">animation</span>: white-beam <span class="number">4000ms</span> ease-in-out infinite;</div><div class="line">&#125;</div><div class="line">@<span class="keyword">keyframes</span> white-beam &#123;</div><div class="line">    0%,50%&#123; <span class="comment">/* 开始不可见*/</span></div><div class="line">        <span class="attribute">opacity</span>: <span class="number">0</span>;</div><div class="line">        <span class="attribute">stroke-dashoffset</span>: <span class="number">0</span>;</div><div class="line">        <span class="attribute">stroke-dasharray</span>: <span class="number">400</span>, <span class="number">2000</span>;</div><div class="line">    &#125;</div><div class="line">    51%,69%&#123; <span class="comment">/* 发射后可见 激光可见*/</span></div><div class="line">        <span class="attribute">opacity</span>: <span class="number">1</span>;</div><div class="line">    &#125;</div><div class="line">    70%, 100%&#123; <span class="comment">/* 激光向右方收缩 */</span></div><div class="line">        <span class="attribute">opacity</span>: <span class="number">0</span>;</div><div class="line">        <span class="attribute">stroke-dashoffset</span>: -<span class="number">500px</span>;</div><div class="line">        <span class="attribute">stroke-dasharray</span>: <span class="number">0</span>, <span class="number">2000</span>;</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="selector-class">.beam-blue</span>&#123;</div><div class="line">    <span class="attribute">animation</span>: blue-beam <span class="number">4000ms</span> ease-in-out infinite;</div><div class="line">&#125;</div><div class="line">@<span class="keyword">keyframes</span> blue-beam &#123;</div><div class="line">    0%,55%&#123; <span class="comment">/* 开始不可见*/</span></div><div class="line">        <span class="attribute">opacity</span>: <span class="number">0</span>;</div><div class="line">        <span class="attribute">stroke-dashoffset</span>: <span class="number">0</span>;</div><div class="line">        <span class="attribute">stroke-dasharray</span>: <span class="number">300</span>, <span class="number">2000</span>;</div><div class="line">    &#125;</div><div class="line">    56%,69%&#123; <span class="comment">/* 发射后可见 激光可见 蓝色激光比白色激光延迟点出现*/</span></div><div class="line">        <span class="attribute">opacity</span>: <span class="number">1</span>;</div><div class="line">    &#125;</div><div class="line">    70%, 100%&#123; <span class="comment">/* 激光向右方收缩 */</span></div><div class="line">        <span class="attribute">opacity</span>: <span class="number">0</span>;</div><div class="line">        <span class="attribute">stroke-dashoffset</span>: -<span class="number">550px</span>;</div><div class="line">        <span class="attribute">stroke-dasharray</span>: <span class="number">0</span>, <span class="number">2000</span>;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+</ol>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/06/06/2017/snap-animation-states-introduction/" rel="next" title="Snap Animation States 介绍">
+                <i class="fa fa-chevron-left"></i> Snap Animation States 介绍
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/06/28/2017/see/" rel="prev" title="tfc">
+                tfc <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="uyan_frame"></div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="rhain" />
+          <p class="site-author-name" itemprop="name">rhain</p>
+           
+              <p class="site-description motion-element" itemprop="description">rhain 的私人花园</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/">
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#行内svg的css动画优缺点"><span class="nav-number">1.</span> <span class="nav-text">行内svg的css动画优缺点</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#优点"><span class="nav-number">1.1.</span> <span class="nav-text">优点</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#缺点"><span class="nav-number">1.2.</span> <span class="nav-text">缺点</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">rhain</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+    
+
+    
+      <!-- UY BEGIN -->
+      <script type="text/javascript" src="http://v2.uyan.cc/code/uyan.js?uid=2137129"></script>
+      <!-- UY END -->
+    
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
