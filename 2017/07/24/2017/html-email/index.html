@@ -1,0 +1,721 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1" />
+
+
+
+
+
+
+<meta name="description" content="最近在写发送邮件的模版，搜集下邮件书写需要注意的点。 正好看到一篇非常详细的文章，加上自己的理解，翻译了一下，以备后用。  原文：rock solid html emails  在我们讨论如何写邮件的时候，必须了解的，写邮件跟写网页是不一样的。web浏览器的标准一直在持续进步中，但是邮件一直还是原地踏步。也就是说我们在网页上使用的众多属性比如css3新增的属性等等，在邮件里面是不可用的，或者说是在">
+<meta property="og:type" content="article">
+<meta property="og:title" content="编写邮件的最佳实践">
+<meta property="og:url" content="http://rhain.me/2017/07/24/2017/html-email/index.html">
+<meta property="og:site_name" content="Rhain&#39;s blog">
+<meta property="og:description" content="最近在写发送邮件的模版，搜集下邮件书写需要注意的点。 正好看到一篇非常详细的文章，加上自己的理解，翻译了一下，以备后用。  原文：rock solid html emails  在我们讨论如何写邮件的时候，必须了解的，写邮件跟写网页是不一样的。web浏览器的标准一直在持续进步中，但是邮件一直还是原地踏步。也就是说我们在网页上使用的众多属性比如css3新增的属性等等，在邮件里面是不可用的，或者说是在">
+<meta property="og:updated_time" content="2017-07-31T08:28:22.882Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="编写邮件的最佳实践">
+<meta name="twitter:description" content="最近在写发送邮件的模版，搜集下邮件书写需要注意的点。 正好看到一篇非常详细的文章，加上自己的理解，翻译了一下，以备后用。  原文：rock solid html emails  在我们讨论如何写邮件的时候，必须了解的，写邮件跟写网页是不一样的。web浏览器的标准一直在持续进步中，但是邮件一直还是原地踏步。也就是说我们在网页上使用的众多属性比如css3新增的属性等等，在邮件里面是不可用的，或者说是在">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://rhain.me/2017/07/24/2017/html-email/"/>
+
+
+
+
+
+  <title>编写邮件的最佳实践 | Rhain's blog</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Rhain's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">rhain 的私语</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://rhain.me/2017/07/24/2017/html-email/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="rhain">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Rhain's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">编写邮件的最佳实践</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-07-24T09:22:17+08:00">
+                2017-07-24
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>最近在写发送邮件的模版，搜集下邮件书写需要注意的点。 正好看到一篇非常详细的文章，加上自己的理解，翻译了一下，以备后用。</p>
+<blockquote>
+<p>原文：<a href="https://24ways.org/2009/rock-solid-html-emails" target="_blank" rel="external">rock solid html emails</a></p>
+</blockquote>
+<p>在我们讨论如何写邮件的时候，必须了解的，写邮件跟写网页是不一样的。web浏览器的标准一直在持续进步中，但是邮件一直还是原地踏步。也就是说<br>我们在网页上使用的众多属性比如css3新增的属性等等，在邮件里面是不可用的，或者说是在某些邮件客户端中不可用的。</p>
+<p>总的来说，写邮件时应该注意三点：</p>
+<ol>
+<li>设计上保持简洁。越是复杂的设计，可能实现在各个不同的邮件客户端表现并不一样，有些甚至是不支持。</li>
+<li>使用table布局和行内样式，同时不要使用新的css属性。</li>
+<li>多测试。</li>
+</ol>
+<p>那么实际编写邮件的时候应该怎么做呢？</p>
+<ol>
+<li>使用table布局。</li>
+</ol>
+<p>很多邮件客户端像Gmail和Outlook2007 对float、margin、padding的支持度很低，需要使用table来布局邮件。内嵌table是支持。在使用table布局的<br>时候需要注意以下几点：</p>
+<pre><code>* 给table cell设置宽度，而不是整个table设置。当我们使用table widths， td widths, td padding 和css padding的时候，在不同的邮件
+客户端中有不同的表现。 最可靠的方式是给table cell 单独设置宽度，而不是给整个table设置宽度。
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">&lt;table cellspacing=&quot;0&quot; cellpadding=&quot;10&quot; border=&quot;0&quot;&gt;</div><div class="line">    &lt;tr&gt;</div><div class="line">        &lt;td width=&quot;80&quot;&gt;&lt;/td&gt;</div><div class="line">        &lt;td width=&quot;280&quot;&gt;&lt;/td&gt;</div><div class="line">    &lt;/tr&gt;</div><div class="line">&lt;/table&gt;</div></pre></td></tr></table></figure>
+
+* 不要想着如果不给一个table cell指定宽度，邮件客户端会自动计算出来。同时避免使用百分比的来设置宽度，Outlook 2007对此支持不够好，
+特别是内嵌table，使用像素来设置宽度。如果想要给table cell添加padding，要么使用table的cellpadding属性或者使用css的padding属性，
+不要同时使用。
+
+* 内嵌table比通过设置left、right margin和padding来布局要可靠的多。如果相同的效果可以通过内嵌table来实现，将会在各个邮件客户端有
+一个统一的表现效果。
+
+* 使用table容器来设置背景颜色。许多邮件客户端会忽略body上设置的background color或者css 设置的背景颜色。为了避免这种情况，可以把整个
+邮件包含在一个宽度为100%的table中，同时给这个table设置一个背景颜色。
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">&lt;table cellspacing=&quot;0&quot; cellpadding=&quot;0&quot; border=&quot;0&quot; width=&quot;100%&quot;&gt;</div><div class="line">    &lt;tr&gt;</div><div class="line">        &lt;td bgcolor=”#000000”&gt;</div><div class="line">            &lt;table&gt;邮件内容...&lt;/table&gt;</div><div class="line">        &lt;/td&gt;</div><div class="line">    &lt;/tr&gt;</div><div class="line">&lt;/table&gt;</div></pre></td></tr></table></figure>
+
+也可以使用这种方式来设置背景图片，但是可能有一些邮件客户端不支持，所以最好还是提供一个背景颜色作为后备。
+
+* 避免在table cell使用不必要的空格。尽可能不要在td标签之间使用空格。有一些邮件客户端在某些场景下会在内容上面或者下面添加额外的padding，
+可能会破坏邮件的整体表现。
+</code></pre><ol>
+<li>css 和 字体格式</li>
+</ol>
+<p>哪些是邮件里面可以使用的样式？我们可以通过<a href="https://www.campaignmonitor.com/css/" target="_blank" rel="external">campaignmonitor</a>这个网站查到。看自己需要支持的<br>邮件客户端，相应的选择使用支持的css属性。同时也需要注意以下几点：</p>
+<pre><code>* 使用行内样式。Gmail不支持head中的style标签和body里面的style标签也不支持link标签。唯一的选择就是使用行内样式。
+
+* 避免使用fonts和十六进制的缩写。一些邮件客户端不支持font属性。不要像下面这样设置font样式：
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">p &#123;</div><div class="line">    font:bold 1em/1.2em georgia,times,serif;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+
+而是正常的书写：
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">p &#123;</div><div class="line">    font-weight: bold;</div><div class="line">    font-size: 1em;</div><div class="line">    line-height: 1.2em;</div><div class="line">    font-family: georgia,times,serif;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+
+当设置颜色的时候，有一些客户端不支持十六进制的缩写像 `color:#fff`,而应该完整填写为 `color:#ffffff`。
+
+* 段落。 就像table cell的间距一样， 段落间距可能难以获得一致的效果。有些人使用两个 `&lt;br/&gt;`标签或者通过给div设置行内margin来
+客服这些缺陷，但是最近的测试显示，大部分客户端已经支持了段落的样式设置。可以使用下面样式：
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">p &#123;</div><div class="line">    margin: 0 0 1.6em 0;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+
+注意使用行内样式。
+如果设计上是高度敏感的，推荐避免使用段落来实现而是使用table cell来。可能需要使用内嵌table和cellpadding来达到你想要的效果。如下：
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">&lt;td width=&quot;200&quot; style=&quot;font-weight:bold; font-size:1em; line-height:1.2em; font-family:georgia,&apos;times&apos;,serif;&quot;&gt;高度敏感内容&lt;/td&gt;</div></pre></td></tr></table></figure>
+
+* 链接。 有一些客户端会使用默认的颜色重写连接的颜色。可以使用这两步避免被重写。第一，使用行内样式给每个连接设置一个默认样式。
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">&lt;a href=&quot;http://somesite.com/&quot; style=&quot;color:#ff00ff&quot;&gt;链接/a&gt;</div></pre></td></tr></table></figure>
+
+第二步，添加一个额外的span标签。
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">&lt;a href=&quot;http://somesite.com/&quot; style=&quot;color:#ff00ff&quot;&gt;&lt;span style=&quot;color:#ff00ff&quot;&gt;连接&lt;/span&gt;&lt;/a&gt;</div></pre></td></tr></table></figure>
+</code></pre><ol>
+<li>邮件中的图片</li>
+</ol>
+<p>要记住，图片对于用户来说不一定是会看的到的。所以在设计邮件的时候，一个是要保持简单，一个是要保证重要的内容不要通过图片来展示。</p>
+<pre><code>* 给图片设置大小。 如果忘记给图片设置大小了。 当图片被阻止的时候某些客户端会使用它们自己计算的尺寸，这就可能会破坏邮件的布局。同时也
+要确保图片设置的大小和它的实际大小要相同，有些客户端会忽略设置的大小而使用图片真正的大小。
+
+* 避免使用png图片。 有一些客户端不支持png图片。使用gif和jpg格式的图片。
+
+* 给背景图片提供容错颜色。有些客户端不支持背景图片，最好是同时设置一个背景颜色，这在客户端不支持背景图片时，可以显示背景颜色。
+
+* 给图片标签添加alt 内容。当图片被阻止显示的时候，依然可以通过alt内容显示图片需要展示的信息。
+
+* hotmail的注意点。hotmail给在图片下面添加额外的padding。可以通过设置`img{display:block}`来移除。
+
+* 不要使用float。Outlook 2007不支持float属性。可以使用align属性来浮动。
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">&lt;img src=&quot;image.jpg&quot; align=&quot;right&quot;&gt;</div></pre></td></tr></table></figure>
+
+如果在Yahoo!mail中看到很奇怪的图片表现。给图片标签添加`align=top` 属性，一般都可以解决。
+</code></pre><ol>
+<li>邮件中的视频</li>
+</ol>
+<p>由于不支持javascript或者object标签。邮件中的视频，很长时间只限于gif。然而最近的研究显示html5 video在许多客户端都可以正常使用。那么我们可以这么做，<br>在使用video不支持的时候，我们可以使用gif作为替代方案。</p>
+<ol>
+<li>移动端的邮件</li>
+</ol>
+<p>随着iPhone和Android的出现以及Palm和RIM改进，移动端的邮件越来越趋向于大一统了。也就是说，我们只需要注意很少的一些地方即可。</p>
+<pre><code>* 邮件宽度小于600px。600px的宽度可以保证在移动端和桌面的邮件客户端都可以表现良好。
+
+* 注意自动的字体优化。 邮件使用webkit内核会自动字体大小来增加可阅读性。如果测试显示这个特性会损害邮件的设计效果，那么可以通过css来禁止：
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">-webkit-text-size-adjust: none;</div></pre></td></tr></table></figure>
+</code></pre><p>最后当然是多测试，看下需要支持的多个邮件客户端表现是啥样子咯。</p>
+<p>来一个大概的邮件源码看看：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div></pre></td><td class="code"><pre><div class="line">&lt;html&gt;</div><div class="line">&lt;head&gt;</div><div class="line">    &lt;meta http-equiv=&quot;content-type&quot; content=&quot;text/html; charset=UTF-8&quot;&gt;</div><div class="line">&lt;/head&gt;</div><div class="line">&lt;body marginheight=&quot;0&quot; topmargin=&quot;0&quot; marginwidth=&quot;0&quot; leftmargin=&quot;0&quot; style=&quot;padding:0; margin:0; background: #f4f4f4;&quot;&gt;</div><div class="line"></div><div class="line">&lt;table cellPadding=&quot;0&quot; cellSpacing=&quot;0&quot; border=&quot;0&quot; width=&quot;100%&quot; style=&quot;border: none; width: 100%;&quot;&gt;</div><div class="line">    &lt;tr&gt;</div><div class="line">        &lt;td style=&quot;width: 100%; padding: 20px 0; text-align:center; margin: 0 auto;&quot; align=&quot;center&quot;&gt;</div><div class="line">            &lt;table cellPadding=&quot;0&quot; cellSpacing=&quot;0&quot; border=&quot;0&quot;</div><div class="line">                   style=&quot;width: 750px; margin: 0 auto; background: #fff; border: 1px solid #eeeeee;&quot;&gt;</div><div class="line">                &lt;tr&gt;</div><div class="line">                    &lt;td align=&quot;left&quot; valign=&quot;middle&quot; style=&quot;height:10px;background: #3a7de8&quot;&gt;</div><div class="line">                    &lt;/td&gt;</div><div class="line">                &lt;/tr&gt;</div><div class="line">                &lt;tr valign=&quot;top&quot;&gt;</div><div class="line">                    &lt;td valign=&quot;top&quot; align=&quot;left&quot;</div><div class="line">                        style=&quot;padding: 30px 20px 10px 20px;color: #1e1e1e;font-size:14px;font-family: -apple-system,&apos;Segoe UI&apos;, Arial,&apos;PingFang SC&apos;,&apos;Microsoft YaHei&apos;,sans-serif;&quot;&gt;</div><div class="line"></div><div class="line">                        &lt;table cellSpacing=&quot;0&quot; cellPadding=&quot;0&quot; border=&quot;0&quot; width=&quot;100%&quot; style=&quot;width: 100%;&quot;&gt;</div><div class="line">                            &lt;tr&gt;</div><div class="line">                                &lt;td style=&quot;font-size: 18px; font-weight: bold;&quot;&gt;</div><div class="line">                                    来自xxxx：</div><div class="line">                                &lt;/td&gt;</div><div class="line">                            &lt;/tr&gt;</div><div class="line">                        &lt;/table&gt;</div><div class="line"></div><div class="line">                        &lt;table cellPadding=&quot;0&quot; cellSpacing=&quot;0&quot; border=&quot;0&quot; style=&quot;width: 100%; padding:0; text-align: center; &quot; &gt;</div><div class="line">                            &lt;tr&gt;</div><div class="line">                                &lt;td align=&quot;left&quot; valign=&quot;top&quot; style=&quot;padding:15px 0 15px 40px; font-size: 14px;&quot;&gt;</div><div class="line">                                    邮件内容</div><div class="line">                                &lt;/td&gt;</div><div class="line">                            &lt;/tr&gt;</div><div class="line">                        &lt;/table&gt;</div><div class="line"></div><div class="line"></div><div class="line">                        &lt;table cellSpacing=&quot;0&quot; cellPadding=&quot;0&quot; border=&quot;0&quot; width=&quot;100%&quot; style=&quot;width: 100%;&quot;&gt;</div><div class="line">                            &lt;tr&gt;</div><div class="line">                                &lt;td align=&quot;left&quot; valign=&quot;top&quot; style=&quot;padding:10px 0 10px 0; font-size: 14px;&quot;&gt;</div><div class="line">                                    &lt;#if data.replyByEmail&gt;</div><div class="line">                                        你可以直接回复这封邮件，或</div><div class="line">                                    &lt;/#if&gt;</div><div class="line">                                    &lt;a style=&quot;color:#0033cc&quot; href=&quot;$&#123;data.targetUrl&#125;&quot; target=&quot;_blank&quot;&gt;前往查看&lt;/a&gt;</div><div class="line"></div><div class="line">                                    &lt;#if data.project?? &amp;&amp; data.disableFooter == false&gt;</div><div class="line">                                        ，你收到此邮件，是因为xxxx</div><div class="line">                                    &lt;/#if&gt;</div><div class="line">                                &lt;/td&gt;</div><div class="line">                            &lt;/tr&gt;</div><div class="line">                        &lt;/table&gt;</div><div class="line"></div><div class="line"></div><div class="line">                        &lt;table cellSpacing=&quot;0&quot; cellPadding=&quot;0&quot; border=&quot;0&quot; width=&quot;100%&quot;</div><div class="line">                               style=&quot;border-top: 1px solid #eeeeee; width: 100%;&quot;&gt;</div><div class="line">                            &lt;tr&gt;</div><div class="line">                                &lt;td align=&quot;left&quot; valign=&quot;top&quot; style=&quot;padding:15px 0 0 0; font-size: 14px; color: #aaaaaa;&quot;&gt;</div><div class="line">                                    ** 此邮件由xxxx系统自动推送，请勿回复 **</div><div class="line">                                &lt;/td&gt;</div><div class="line">                                &lt;td align=&quot;right&quot; style=&quot;text-align: right; padding:15px 0 0 0;&quot;&gt;</div><div class="line">                                    &lt;a href=&quot;http://x.code.oa.com&quot; target=&quot;_blank&quot;&gt;</div><div class="line">                                        &lt;img alt=&quot;xxx&quot; width=&quot;195px&quot; height=&quot;22px&quot; src=&quot;&quot; style=&quot;border:none;&quot;/&gt;</div><div class="line">                                    &lt;/a&gt;</div><div class="line">                                &lt;/td&gt;</div><div class="line">                            &lt;/tr&gt;</div><div class="line">                        &lt;/table&gt;</div><div class="line">                    &lt;/td&gt;</div><div class="line">                &lt;/tr&gt;</div><div class="line">            &lt;/table&gt;</div><div class="line">        &lt;/td&gt;</div><div class="line">    &lt;/tr&gt;</div><div class="line"></div><div class="line">&lt;/table&gt;</div><div class="line">&lt;/body&gt;</div><div class="line">&lt;/html&gt;</div></pre></td></tr></table></figure></p>
+<p> 在outlook中设置微软雅黑字体失效，foxmail中没问题。 解决方案：在header中加入样式<br> <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">&lt;style type=&quot;text/css&quot;&gt;</div><div class="line">     body &#123;</div><div class="line">         font-family: &quot;微软雅黑&quot;;</div><div class="line">     &#125;</div><div class="line"> &lt;/style&gt;</div></pre></td></tr></table></figure></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/06/21/2017/Faster Page Load Using Lightweight CSS and SVG Animation/" rel="next" title="Faster Page Load Using Lightweight CSS and SVG Animation (Without JavaScript)">
+                <i class="fa fa-chevron-left"></i> Faster Page Load Using Lightweight CSS and SVG Animation (Without JavaScript)
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="uyan_frame"></div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview sidebar-panel sidebar-panel-active">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="rhain" />
+          <p class="site-author-name" itemprop="name">rhain</p>
+           
+              <p class="site-description motion-element" itemprop="description">rhain 的私人花园</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/">
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">rhain</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+    
+
+    
+      <!-- UY BEGIN -->
+      <script type="text/javascript" src="http://v2.uyan.cc/code/uyan.js?uid=2137129"></script>
+      <!-- UY END -->
+    
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
