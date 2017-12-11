@@ -236,6 +236,903 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://rhain.me/2017/11/21/2017/spring-multi-environment/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="rhain">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Rhain's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2017/11/21/2017/spring-multi-environment/" itemprop="url">springmvc 多环境实践</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-11-21T11:01:05+08:00">
+                2017-11-21
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>起因： 项目需要实现i18n 同时还需要根据在不同环境下，文字内容展示不一样，页面屏蔽功能，controller接口返回403。</p>
+<h3 id="spring-i18n-页面上文字在不同环境下内容展示不一样。"><a href="#spring-i18n-页面上文字在不同环境下内容展示不一样。" class="headerlink" title="spring i18n 页面上文字在不同环境下内容展示不一样。"></a>spring i18n 页面上文字在不同环境下内容展示不一样。</h3><p>spring实现的i18n按照官方教程就可以很容易实现，但是根据在不同环境下，文字内容展示则需要另外的处理。我们使用了spring的profile方式来实现不同环境的切换。<br>在<code>web.xml</code>中配置当前环境：<br><figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">context-param</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">param-name</span>&gt;</span>spring.profiles.active<span class="tag">&lt;/<span class="name">param-name</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">param-value</span>&gt;</span>pro<span class="tag">&lt;/<span class="name">param-value</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">context-param</span>&gt;</span></div></pre></td></tr></table></figure></p>
+<p>同时在spring的配置文件中配置不同环境的配置。<br><figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">beans</span> <span class="attr">profile</span>=<span class="string">"pro"</span>&gt;</span></div><div class="line">    <span class="comment">&lt;!-- allows for $&#123;&#125; replacement in the spring xml configuration from the</span></div><div class="line">        application-default.properties, application-dev files on the classpath --&gt;</div><div class="line">    <span class="tag">&lt;<span class="name">context:property-placeholder</span></span></div><div class="line">            <span class="attr">location</span>=<span class="string">"classpath:env/application-pro.properties"</span></div><div class="line">            <span class="attr">ignore-unresolvable</span>=<span class="string">"true"</span> /&gt;</div><div class="line"></div><div class="line"><span class="tag">&lt;/<span class="name">beans</span>&gt;</span></div><div class="line"></div><div class="line"><span class="tag">&lt;<span class="name">beans</span> <span class="attr">profile</span>=<span class="string">"test"</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">context:property-placeholder</span></span></div><div class="line">            <span class="attr">location</span>=<span class="string">"classpath:env/application-test.properties"</span></div><div class="line">            <span class="attr">ignore-unresolvable</span>=<span class="string">"true"</span> /&gt;</div><div class="line"><span class="tag">&lt;/<span class="name">beans</span>&gt;</span></div></pre></td></tr></table></figure></p>
+<p>这里根据不同环境配置两个不同的properties文件的原因是： 当使用spring的i18n的时候需要根据key去读取i18n中的value，但是为了在不同环境下显示不同的内容，需要在读取key的时候根据当前的环境转换为环境当前的key。举个例子：<spring:message code="sidebar.dashboard.PROJECTS"> 这个是读取’sidebar.dashboard.PROJECTS’的i18n值，但是在pro环境下需要显示<em>项目</em>，在测试环境需要显示<em>测试环境</em>。如果只是显示的配置i18n 那肯定是不满足条件的。</spring:message></p>
+<p>通过查看<code>spring:message</code>的源码发现它有一个<code>resolveMessage</code>的方法来解析当前的code对应的值。这就是我们可以动手的地方了，在这方法里面可以根据当前的环境把code的值转换为相应环境下的code。而<code>env/application-pro.properties</code>和<code>env/application-test.properties</code>中设置的就是code在相应环境下对应的值如：</p>
+<p><code>env/application-pro.properties</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">sidebar.dashboard.PROJECTS=sidebar.dashboard.PROJECTS.PRO</div></pre></td></tr></table></figure>
+<p><code>env/application-test.properties</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">sidebar.dashboard.PROJECTS=sidebar.dashboard.PROJECTS.TEST</div></pre></td></tr></table></figure>
+<p>同时在i18n的配置文件中会配置对应的显示内容:</p>
+<p><code>message.properties</code><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">sidebar.dashboard.PROJECTS.PRO=Project</div><div class="line">sidebar.dashboard.PROJECTS.TEST=Test Project</div></pre></td></tr></table></figure></p>
+<p><code>message_zh_CN.properties</code><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">sidebar.dashboard.PROJECTS.PRO=项目</div><div class="line">sidebar.dashboard.PROJECTS.TEST=测试项目</div></pre></td></tr></table></figure></p>
+<p>我们在重写 <code>org.springframework.web.servlet.tags.MessageTag</code> 中的 <code>resolveMessage</code>方法，简单做法是 复制MessageTag 自定义一个标签，用法跟<code>spring:code</code>完全一样。<code>resolveMessage</code>:<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">protected</span> String <span class="title">resolveMessage</span><span class="params">()</span> <span class="keyword">throws</span> JspException, NoSuchMessageException </span>&#123;</div><div class="line">        MessageSource messageSource = getMessageSource();</div><div class="line">        <span class="keyword">if</span> (messageSource == <span class="keyword">null</span>) &#123;</div><div class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> JspTagException(<span class="string">"No corresponding MessageSource found"</span>);</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        <span class="comment">// Evaluate the specified MessageSourceResolvable, if any.</span></div><div class="line">        <span class="keyword">if</span> (<span class="keyword">this</span>.message != <span class="keyword">null</span>) &#123;</div><div class="line">            <span class="comment">// We have a given MessageSourceResolvable.</span></div><div class="line">            <span class="keyword">return</span> messageSource.getMessage(<span class="keyword">this</span>.message, getRequestContext().getLocale());</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        <span class="keyword">if</span> (<span class="keyword">this</span>.code != <span class="keyword">null</span> || <span class="keyword">this</span>.text != <span class="keyword">null</span>) &#123;</div><div class="line"></div><div class="line">            <span class="comment">// 只是多了根据环境去转换当前的code的代码</span></div><div class="line">            String keyCode = MessagePropertiesUtil.getProperty(<span class="keyword">this</span>.code);</div><div class="line">            <span class="keyword">if</span>(!StringUtils.isEmpty(keyCode))&#123;</div><div class="line">                setCode(keyCode);</div><div class="line">            &#125;</div><div class="line"></div><div class="line">            <span class="comment">// We have a code or default text that we need to resolve.</span></div><div class="line">            Object[] argumentsArray = resolveArguments(<span class="keyword">this</span>.arguments);</div><div class="line">            <span class="keyword">if</span> (!<span class="keyword">this</span>.nestedArguments.isEmpty()) &#123;</div><div class="line">                argumentsArray = appendArguments(argumentsArray,</div><div class="line">                        <span class="keyword">this</span>.nestedArguments.toArray());</div><div class="line">            &#125;</div><div class="line"></div><div class="line">            <span class="keyword">if</span> (<span class="keyword">this</span>.text != <span class="keyword">null</span>) &#123;</div><div class="line">                <span class="comment">// We have a fallback text to consider.</span></div><div class="line">                <span class="keyword">return</span> messageSource.getMessage(</div><div class="line">                        <span class="keyword">this</span>.code, argumentsArray, <span class="keyword">this</span>.text, getRequestContext().getLocale());</div><div class="line">            &#125;</div><div class="line">            <span class="keyword">else</span> &#123;</div><div class="line">                <span class="comment">// We have no fallback text to consider.</span></div><div class="line">                <span class="keyword">return</span> messageSource.getMessage(</div><div class="line">                        <span class="keyword">this</span>.code, argumentsArray, getRequestContext().getLocale());</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        <span class="comment">// All we have is a specified literal text.</span></div><div class="line">        <span class="keyword">return</span> <span class="keyword">this</span>.text;</div><div class="line">    &#125;</div></pre></td></tr></table></figure></p>
+<p>在看下<code>MessagePropertiesUtil</code>的实现： 会把当前环境注入进来，同时把对应环境转换的key加载到props属性中。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Component</span></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MessagePropertiesUtil</span> <span class="keyword">implements</span> <span class="title">InitializingBean</span> </span>&#123;</div><div class="line"></div><div class="line">    <span class="meta">@Value</span>(<span class="string">"$&#123;spring.profiles.active&#125;"</span>)</div><div class="line">    <span class="keyword">private</span> String env;</div><div class="line"></div><div class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Properties props = <span class="keyword">new</span> Properties();</div><div class="line"></div><div class="line">    <span class="meta">@Override</span></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">afterPropertiesSet</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</div><div class="line">        Resource resource = <span class="keyword">new</span> ClassPathResource(<span class="string">"/env/application-"</span> + env + <span class="string">".properties"</span>);</div><div class="line">        props = PropertiesLoaderUtils.loadProperties(resource);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> String <span class="title">getProperty</span><span class="params">(String key)</span></span>&#123;</div><div class="line">        <span class="keyword">return</span> props.getProperty(key);</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>显示我们在发布代码的时候，就需要修改下web.xml 的spring.profile.active 参数就可以配置显示不同环境显示不同内容的功能了。</p>
+<hr>
+<p>上面算是一个比较别扭的实现方案，因为我们还是写了读取properties的类来读取，但是spring其实是已经把properties读取了一遍。下面介绍一个更加优雅的实现方案。</p>
+<p>首先需要了解到一个知识点：当我们使用<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">&lt;context:property-placeholder</div><div class="line">            location=&quot;classpath:env/application-test.properties&quot;</div><div class="line">            ignore-unresolvable=&quot;true&quot; /&gt;</div></pre></td></tr></table></figure></p>
+<p>来配置properties时， spring不会把properties 注入到spring的 environment属性中，但是如果是使用了注解 @PropertySource 来加载properties，spring 则会把properties 注入到 environment 中。</p>
+<p>我们可以看到 MessageTag 继承的 HtmlEscapingAwareTag也继承了 RequestContextAwareTag类，也就是说我们可以获取到spring的 Environment对象。这就好办了，只需从environment中获取application-${dev}.properties对应的属性就可以随意切换不同环境下显示的内容了。</p>
+<p>首先把我们在spring配置文件的<context:property-placeholder> 代码注释掉或者删掉：</context:property-placeholder></p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="comment">&lt;!--&lt;beans profile="pro"&gt;</span></div><div class="line">		&lt;context:property-placeholder</div><div class="line">				location="classpath:env/application-pro.properties"</div><div class="line">				ignore-unresolvable="true" /&gt;</div><div class="line">	&lt;/beans&gt;</div><div class="line"></div><div class="line">	&lt;beans profile="qcloud"&gt;</div><div class="line">		&lt;context:property-placeholder</div><div class="line">				location="classpath:env/application-qcloud.properties"</div><div class="line">				ignore-unresolvable="true" /&gt;</div><div class="line">	&lt;/beans&gt;--&gt;</div></pre></td></tr></table></figure>
+<p>添加EnvConfig类</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/**</span></div><div class="line"> * 使用 <span class="doctag">@PropertySource</span> 配置的方式会把properties注入到spring 的 Environment中，也就是说可以在Environment获取properties中的属性，</div><div class="line"> * 而使用：</div><div class="line"> * &lt;context:property-placeholder location="classpath:env/application-pro.properties" ignore-unresolvable="true" /&gt;</div><div class="line"> * 这种方式则不会把properties 注入到 Environment 中。</div><div class="line"> * $&#123;spring.profiles.active&#125; 会替换为web.xml 中定义的 spring.profiles.active context-param 设置的值</div><div class="line"> *</div><div class="line"> */</div><div class="line"><span class="meta">@Configuration</span></div><div class="line"><span class="meta">@PropertySource</span>(value = <span class="string">"classpath:env/application-$&#123;spring.profiles.active&#125;.properties"</span>, ignoreResourceNotFound = <span class="keyword">true</span>)</div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">EnvConfig</span> </span>&#123;</div><div class="line"></div><div class="line">    <span class="meta">@Bean</span></div><div class="line">    <span class="function"><span class="keyword">public</span> PropertySourcesPlaceholderConfigurer <span class="title">propertySourcesPlaceholderConfigurer</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> <span class="keyword">new</span> PropertySourcesPlaceholderConfigurer();</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>修改 resolveMessage 中的实现：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">protected</span> String <span class="title">resolveMessage</span><span class="params">()</span> <span class="keyword">throws</span> JspException, NoSuchMessageException </span>&#123;</div><div class="line">        MessageSource messageSource = getMessageSource();</div><div class="line">        <span class="keyword">if</span> (messageSource == <span class="keyword">null</span>) &#123;</div><div class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> JspTagException(<span class="string">"No corresponding MessageSource found"</span>);</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        <span class="comment">// Evaluate the specified MessageSourceResolvable, if any.</span></div><div class="line">        <span class="keyword">if</span> (<span class="keyword">this</span>.message != <span class="keyword">null</span>) &#123;</div><div class="line">            <span class="comment">// We have a given MessageSourceResolvable.</span></div><div class="line">            <span class="keyword">return</span> messageSource.getMessage(<span class="keyword">this</span>.message, getRequestContext().getLocale());</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        <span class="keyword">if</span> (<span class="keyword">this</span>.code != <span class="keyword">null</span> || <span class="keyword">this</span>.text != <span class="keyword">null</span>) &#123;</div><div class="line">            <span class="keyword">final</span> Environment environment = <span class="keyword">this</span>.getRequestContext().getWebApplicationContext().getEnvironment();</div><div class="line">            <span class="keyword">if</span> (environment != <span class="keyword">null</span>)&#123;</div><div class="line">                String keyCode = environment.getProperty(<span class="keyword">this</span>.code);</div><div class="line">                <span class="keyword">if</span>(!StringUtils.isEmpty(keyCode))&#123;</div><div class="line">                    setCode(keyCode);</div><div class="line">                &#125;</div><div class="line">            &#125;</div><div class="line"></div><div class="line">            <span class="comment">// We have a code or default text that we need to resolve.</span></div><div class="line">            Object[] argumentsArray = resolveArguments(<span class="keyword">this</span>.arguments);</div><div class="line">            <span class="keyword">if</span> (!<span class="keyword">this</span>.nestedArguments.isEmpty()) &#123;</div><div class="line">                argumentsArray = appendArguments(argumentsArray,</div><div class="line">                        <span class="keyword">this</span>.nestedArguments.toArray());</div><div class="line">            &#125;</div><div class="line"></div><div class="line">            <span class="keyword">if</span> (<span class="keyword">this</span>.text != <span class="keyword">null</span>) &#123;</div><div class="line">                <span class="comment">// We have a fallback text to consider.</span></div><div class="line">                <span class="keyword">return</span> messageSource.getMessage(</div><div class="line">                        <span class="keyword">this</span>.code, argumentsArray, <span class="keyword">this</span>.text, getRequestContext().getLocale());</div><div class="line">            &#125;</div><div class="line">            <span class="keyword">else</span> &#123;</div><div class="line">                <span class="comment">// We have no fallback text to consider.</span></div><div class="line">                <span class="keyword">return</span> messageSource.getMessage(</div><div class="line">                        <span class="keyword">this</span>.code, argumentsArray, getRequestContext().getLocale());</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        <span class="comment">// All we have is a specified literal text.</span></div><div class="line">        <span class="keyword">return</span> <span class="keyword">this</span>.text;</div><div class="line">    &#125;</div></pre></td></tr></table></figure></p>
+<p>这样实现就非常简单明了了。</p>
+<h3 id="实现不同环境下隐藏页面内容。"><a href="#实现不同环境下隐藏页面内容。" class="headerlink" title="实现不同环境下隐藏页面内容。"></a>实现不同环境下隐藏页面内容。</h3><p>实现： 最简单的做法是写一个JSP tag 来判断当前是啥环境，如果满足条件则隐藏内容。正好spring提供了一个可以获取当前环境的JspTag父类<code>RequestContextAwareTag</code>。那我们实现就简单了，继承<code>RequestContextAwareTag</code> 重写<code>doStartTagInternal</code>方法，在自定义标签。</p>
+<p>首先继承<code>RequestContextAwareTag</code>类：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">EnvTag</span> <span class="keyword">extends</span> <span class="title">RequestContextAwareTag</span> </span>&#123;</div><div class="line"></div><div class="line">    <span class="keyword">private</span> String env;</div><div class="line"></div><div class="line">    <span class="meta">@Override</span></div><div class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">int</span> <span class="title">doStartTagInternal</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</div><div class="line">        <span class="keyword">final</span> Environment environment = <span class="keyword">this</span>.getRequestContext().getWebApplicationContext().getEnvironment();</div><div class="line">        <span class="keyword">if</span>(environment != <span class="keyword">null</span>)&#123;</div><div class="line">            <span class="keyword">final</span> String[] profiles = environment.getActiveProfiles();</div><div class="line">            <span class="keyword">if</span>(ArrayUtils.contains(profiles, <span class="keyword">this</span>.env))&#123;</div><div class="line">                <span class="keyword">return</span> SKIP_BODY;</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">return</span> EVAL_BODY_INCLUDE;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getEnv</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> env;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setEnv</span><span class="params">(String env)</span> </span>&#123;</div><div class="line">        <span class="keyword">this</span>.env = env;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>在tld中添加自定义标签。</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">&lt;?xml version="1.0" encoding="UTF-8" ?&gt;</div><div class="line">    <span class="tag">&lt;<span class="name">taglib</span> <span class="attr">xmlns</span>=<span class="string">"http://java.sun.com/xml/ns/j2ee"</span> <span class="attr">xmlns:xsi</span>=<span class="string">"http://www.w3.org/2001/XMLSchema-instance"</span> <span class="attr">xsi:schemaLocation</span>=<span class="string">"http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-jsptaglibrary_2_0.xsd"</span> <span class="attr">version</span>=<span class="string">"2.0"</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">description</span>&gt;</span>Conditional profile Tag<span class="tag">&lt;/<span class="name">description</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">tlib-version</span>&gt;</span>2.1<span class="tag">&lt;/<span class="name">tlib-version</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">short-name</span>&gt;</span>ProfileConditionTag<span class="tag">&lt;/<span class="name">short-name</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">uri</span>&gt;</span><span class="tag">&lt;/<span class="name">uri</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">tag</span>&gt;</span></div><div class="line">         <span class="tag">&lt;<span class="name">name</span>&gt;</span>env<span class="tag">&lt;/<span class="name">name</span>&gt;</span></div><div class="line">          <span class="tag">&lt;<span class="name">tag-class</span>&gt;</span>com.xxx.xxx.xxx.jstl.tag.EnvTag<span class="tag">&lt;/<span class="name">tag-class</span>&gt;</span></div><div class="line">          <span class="tag">&lt;<span class="name">description</span>&gt;</span>控制在什么环境下不显示<span class="tag">&lt;/<span class="name">description</span>&gt;</span></div><div class="line">          <span class="tag">&lt;<span class="name">body-content</span>&gt;</span>JSP<span class="tag">&lt;/<span class="name">body-content</span>&gt;</span></div><div class="line">          <span class="tag">&lt;<span class="name">attribute</span>&gt;</span></div><div class="line">              <span class="tag">&lt;<span class="name">name</span>&gt;</span>env<span class="tag">&lt;/<span class="name">name</span>&gt;</span></div><div class="line">              <span class="tag">&lt;<span class="name">required</span>&gt;</span>true<span class="tag">&lt;/<span class="name">required</span>&gt;</span></div><div class="line">          <span class="tag">&lt;/<span class="name">attribute</span>&gt;</span></div><div class="line">      <span class="tag">&lt;/<span class="name">tag</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">taglib</span>&gt;</span></div></pre></td></tr></table></figure>
+<p>在页面中使用：<br><figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">&lt;gui:env env="test"&gt;</div><div class="line">    test env</div><div class="line">&lt;/gui:env&gt;</div></pre></td></tr></table></figure></p>
+<p>自定义标签的教程请自行google。</p>
+<h3 id="特定环境下接口返回403。"><a href="#特定环境下接口返回403。" class="headerlink" title="特定环境下接口返回403。"></a>特定环境下接口返回403。</h3><p>首先自定义一个注解</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Target</span>(&#123;ElementType.METHOD, ElementType.TYPE&#125;)</div><div class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</div><div class="line"><span class="keyword">public</span> <span class="meta">@interface</span> EnvConfig &#123;</div><div class="line">    String[] value() <span class="keyword">default</span> &#123;&#125;;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>在我们需要拦截的请求的controller，或者方法上配置这个注解</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@EnvConfig</span>(value=&#123;<span class="string">"test.controller.enable"</span>&#125;)</div><div class="line"><span class="meta">@Controller</span></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TestController</span> </span>&#123;</div><div class="line"></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>或者方法上：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@EnvConfig</span>(value=&#123;<span class="string">"test.method.enable"</span>&#125;)</div><div class="line"><span class="meta">@RequestMapping</span>(method = RequestMethod.GET, value = <span class="string">"/test"</span>)</div><div class="line"><span class="function"><span class="keyword">public</span> String <span class="title">test</span><span class="params">(Model model, RedirectAttributes redirectAttributes)</span></span>&#123;</div><div class="line">    <span class="comment">//todo</span></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>写一个spring的拦截器解析方法上和类上的注解，如果注解上有EnvConfig类，同时里面的设置的value的key在properties中对应的值为true，则抛错。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Component</span></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ConfigInterceptor</span> <span class="keyword">implements</span> <span class="title">HandlerInterceptor</span> </span>&#123;</div><div class="line"></div><div class="line">    <span class="meta">@Autowired</span></div><div class="line">    Environment environment;</div><div class="line"></div><div class="line">    <span class="meta">@Override</span></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">preHandle</span><span class="params">(HttpServletRequest request, HttpServletResponse response, Object handler)</span> <span class="keyword">throws</span> Exception </span>&#123;</div><div class="line">        HandlerMethod hm = (HandlerMethod) handler;</div><div class="line">        Method method = hm.getMethod();</div><div class="line"></div><div class="line">        <span class="keyword">if</span> (method.getDeclaringClass().isAnnotationPresent(EnvConfig.class)) &#123;</div><div class="line">            String[] classValue = method.getDeclaringClass().getAnnotation(EnvConfig.class).value();</div><div class="line">            <span class="keyword">if</span>(isValueDisable(classValue))&#123;</div><div class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> ResourceNotFoundException(ErrorCode.RESOURCE_NOT_FOUND);</div><div class="line">            &#125;</div><div class="line"></div><div class="line">        &#125;</div><div class="line">        <span class="keyword">if</span> (method.isAnnotationPresent(EnvConfig.class)) &#123;</div><div class="line">            String[] methodValue = method.getAnnotation(EnvConfig.class).value();</div><div class="line">            <span class="keyword">if</span>(isValueDisable(methodValue))&#123;</div><div class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> ResourceNotFoundException(ErrorCode.RESOURCE_NOT_FOUND);</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">isValueDisable</span><span class="params">(String[] configs)</span> </span>&#123;</div><div class="line">        <span class="keyword">if</span> (configs != <span class="keyword">null</span> &amp;&amp; configs.length &gt; <span class="number">0</span>) &#123;</div><div class="line">            <span class="keyword">for</span> (String config : configs) &#123;</div><div class="line">                String configValue = environment.getProperty(config);</div><div class="line">                <span class="keyword">if</span> (!StringUtils.isEmpty(configValue) &amp;&amp; !Boolean.valueOf(configValue)) &#123;</div><div class="line">                    <span class="keyword">return</span> <span class="keyword">true</span>;</div><div class="line">                &#125;</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="meta">@Override</span></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">postHandle</span><span class="params">(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView)</span> <span class="keyword">throws</span> Exception </span>&#123;</div><div class="line"></div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="meta">@Override</span></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">afterCompletion</span><span class="params">(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex)</span> <span class="keyword">throws</span> Exception </span>&#123;</div><div class="line"></div><div class="line">    &#125;</div><div class="line"></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>在spring的配置文件添加拦截器配置：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">mvc:interceptors</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">bean</span> <span class="attr">class</span>=<span class="string">"com.xxx.xxx.ConfigInterceptor"</span> &gt;</span><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">bean</span> <span class="attr">class</span>=<span class="string">"com.xxx.xxx.LegalInterceptor"</span> &gt;</span><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">mvc:interceptors</span>&gt;</span></div></pre></td></tr></table></figure>
+<p>在看下properties中的配置</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">test.method.enable=false</div><div class="line">test.controller.enable=false</div></pre></td></tr></table></figure>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://rhain.me/2017/10/30/2017/javascript-debugging-tips/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="rhain">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Rhain's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2017/10/30/2017/javascript-debugging-tips/" itemprop="url">调试javascript小技巧</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-10-30T15:13:31+08:00">
+                2017-10-30
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>大部分的建议适用于Chrome Inspector 和Firefox。只记录我不太了解的方式:D.</p>
+<ol>
+<li><p>‘debugger’.</p>
+<p> 在代码中插入<code>debugger</code>,Chrome在执行代码的时候会自动停止在当前代码行。也就是说可以快速在编辑器中设置断点，而不用在chrome去找到代码文件设计断点。</p>
+ <figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> (thisThing) &#123;</div><div class="line">    <span class="keyword">debugger</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p>用表格展示对象<br> 有时候我们有一些非常复杂的对象需要展示，我们可以使用console.log() 展示。但是可以使用console.table来展示，会比console.log更加易读。</p>
+ <figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> animals = [</div><div class="line">    &#123; <span class="attr">animal</span>: <span class="string">'Horse'</span>, <span class="attr">name</span>: <span class="string">'Henry'</span>, <span class="attr">age</span>: <span class="number">43</span> &#125;,</div><div class="line">    &#123; <span class="attr">animal</span>: <span class="string">'Dog'</span>, <span class="attr">name</span>: <span class="string">'Fred'</span>, <span class="attr">age</span>: <span class="number">13</span> &#125;,</div><div class="line">    &#123; <span class="attr">animal</span>: <span class="string">'Cat'</span>, <span class="attr">name</span>: <span class="string">'Frodo'</span>, <span class="attr">age</span>: <span class="number">18</span> &#125;</div><div class="line">];</div><div class="line"></div><div class="line"><span class="built_in">console</span>.table(animals);</div></pre></td></tr></table></figure>
+<p> 会输出：<br> <img src="/images/2017/javascript-tips/tips-2.png" alt=""></p>
+</li>
+<li><p>快速找到DOM元素</p>
+<p> Chrome会把最后5个点击的DOM元素保存到内存中，所以你最后点击的DOM元素，可以通过$0来获取，倒数第二个可以用$1,以此类推。如果你依序点击了下面的DOM节点，‘item-4′, ‘item-3’, ‘item-2’, ‘item-1’, ‘item-0’ ，那么可以在控制台很快速的获取到这5个节点。</p>
+<p> <img src="/images/2017/javascript-tips/tips-3.png" alt=""></p>
+</li>
+<li><p>使用console.time() and console.timeEnd()计算函数执行时间。如果想要一段代码执行的准确时间，可以使用console.time() and console.timeEnd()来实现。</p>
+<p> 如有下面一段代码：</p>
+ <figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">console</span>.time(<span class="string">'Timer1'</span>);</div><div class="line"></div><div class="line"><span class="keyword">var</span> items = [];</div><div class="line"></div><div class="line"><span class="keyword">for</span>(<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; <span class="number">100000</span>; i++)&#123;</div><div class="line">   items.push(&#123;<span class="attr">index</span>: i&#125;);</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="built_in">console</span>.timeEnd(<span class="string">'Timer1'</span>);</div></pre></td></tr></table></figure>
+<p> 会输出：<br> <img src="/images/2017/javascript-tips/tips-4.png" alt=""></p>
+</li>
+<li><p>获取一个函数的堆栈。console.trace() 可以很方便的获取一个函数的函数调用信息。</p>
+<p> 比如有一下代码：</p>
+ <figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> car;</div><div class="line"><span class="keyword">var</span> func1 = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">    func2();</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="keyword">var</span> func2 = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">    func4();</div><div class="line">&#125;</div><div class="line"><span class="keyword">var</span> func3 = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="keyword">var</span> func4 = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">    car = <span class="keyword">new</span> Car();</div><div class="line">    car.funcX();</div><div class="line">&#125;</div><div class="line"><span class="keyword">var</span> Car = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">    <span class="keyword">this</span>.brand = ‘volvo’;</div><div class="line">    <span class="keyword">this</span>.color = ‘red’;</div><div class="line">    <span class="keyword">this</span>.funcX = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">        <span class="keyword">this</span>.funcY();</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">this</span>.funcY = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">        <span class="keyword">this</span>.funcZ();</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">this</span>.funcZ = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">        <span class="built_in">console</span>.trace(‘trace car’)</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line">func1();</div><div class="line"><span class="keyword">var</span> car;</div><div class="line"><span class="keyword">var</span> func1 = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">    func2();</div><div class="line">&#125;</div><div class="line"><span class="keyword">var</span> func2 = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">    func4();</div><div class="line">&#125;</div><div class="line"><span class="keyword">var</span> func3 = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">&#125;</div><div class="line"><span class="keyword">var</span> func4 = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">    car = <span class="keyword">new</span> Car();</div><div class="line">    car.funcX();</div><div class="line">&#125;</div><div class="line"><span class="keyword">var</span> Car = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">    <span class="keyword">this</span>.brand = ‘volvo’;</div><div class="line">    <span class="keyword">this</span>.color = ‘red’;</div><div class="line">    <span class="keyword">this</span>.funcX = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">        <span class="keyword">this</span>.funcY();</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">this</span>.funcY = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">        <span class="keyword">this</span>.funcZ();</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">this</span>.funcZ = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">        <span class="built_in">console</span>.trace(‘trace car’)</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line">func1();</div></pre></td></tr></table></figure>
+<p> 会输出：<br> <img src="/images/2017/javascript-tips/tip-5.png" alt=""></p>
+</li>
+<li><p>快速debug函数</p>
+<p> 一般我们debug函数有两种方法：一是在chrome inspector中到代码设置断点。二是在脚本中添加debugger。</p>
+<p> 但是有一种更加快速的方法。在控制台执行debug(funcName)，脚本执行到这个函数的会将会停下来。不过这个方法不适用在私有和匿名方法。</p>
+<p> 比如有下面的代码：</p>
+ <figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> func1 = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">    func2();</div><div class="line">&#125;;</div><div class="line"></div><div class="line"><span class="keyword">var</span> Car = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">    <span class="keyword">this</span>.funcX = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">        <span class="keyword">this</span>.funcY();</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">this</span>.funcY = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">        <span class="keyword">this</span>.funcZ();</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="keyword">var</span> car = <span class="keyword">new</span> Car();</div></pre></td></tr></table></figure>
+<p> 在控制台输入<code>debug(car.funcY)</code>,当脚本执行到car.func时会进入debug模式。<br> <img src="/images/2017/javascript-tips/tips-6.png" alt=""></p>
+</li>
+<li><p>观察函数调用和传入的参数</p>
+<p> 在Chrome的控制台，我们可以监控一个函数，当它被调用的时候，会记录下来，同时会显示传入的参数值。</p>
+<p> 有这段代码：</p>
+ <figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> func1 = <span class="function"><span class="keyword">function</span>(<span class="params">x, y, z</span>) </span>&#123;</div><div class="line"><span class="comment">//....</span></div><div class="line">&#125;;</div></pre></td></tr></table></figure>
+<p> 会输出：</p>
+<p> <img src="/images/2017/javascript-tips/tips-7.png" alt=""></p>
+<p> 这是一种非常方便的方式用于观察传入函数参数的值。</p>
+</li>
+<li><p>断点DOM 节点变化。</p>
+<p> 有时候DOM的节点的属性改变了，但是我们却不知道为啥。当DOM节点变化的时候，Chrome可以暂时脚本。在Chrome Inspector中右键一个元素，选择一个断点方式。</p>
+<p> <img src="/images/2017/javascript-tips/tips-8.png" alt=""></p>
+<blockquote>
+<p>原文：<a href="https://raygun.com/javascript-debugging-tips" target="_blank" rel="external">javascript-debugging-tips</a></p>
+</blockquote>
+</li>
+</ol>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://rhain.me/2017/10/26/2017/SurviveJS-Webpack/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="rhain">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Rhain's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2017/10/26/2017/SurviveJS-Webpack/" itemprop="url">surviveJs webpack 阅读笔记</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-10-26T16:49:10+08:00">
+                2017-10-26
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <blockquote>
+<p><a href="https://survivejs.com/webpack/developing/automatic-browser-refresh/" target="_blank" rel="external">SurviveJs - Webpack</a></p>
+</blockquote>
+<p>阅读<code>surviveJs - Webpack</code> 自己不懂或者不知道的地方记录下来。</p>
+<ol>
+<li><p><code>webpack-dev-server</code> 是在内存中运行的，也就意味着生成的bundle不会写入到文件，我们可以通过http请求中获取到内容（测试过）。</p>
+<p> 如果我们需要把内存中的bundle写入文件。可以使用 <code>webpack-disk-plugin</code>, <code>write-file-webpack-plugin</code> 插件。或者 <code>html-webpack-harddisk-plugin</code>。</p>
+</li>
+<li><p>webpack 的配置文件里面可以获取到<code>--env</code> 的值的：</p>
+ <figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> path = <span class="built_in">require</span>(<span class="string">'path'</span>);</div><div class="line"><span class="keyword">const</span> HtmlWebpackPlugin = <span class="built_in">require</span>(<span class="string">'html-webpack-plugin'</span>);</div><div class="line"></div><div class="line"><span class="keyword">const</span> PATHS = &#123;</div><div class="line">  <span class="attr">app</span>: path.join(__dirname, <span class="string">'app'</span>),</div><div class="line">  <span class="attr">build</span>: path.join(__dirname, <span class="string">'build'</span>),</div><div class="line">&#125;;</div><div class="line"></div><div class="line"><span class="keyword">const</span> commonConfig = &#123;</div><div class="line">  <span class="comment">// Entries have to resolve to files! They rely on Node</span></div><div class="line">  <span class="comment">// convention by default so if a directory contains *index.js*,</span></div><div class="line">  <span class="comment">// it resolves to that.</span></div><div class="line">  entry: &#123;</div><div class="line">    <span class="attr">app</span>: PATHS.app,</div><div class="line">  &#125;,</div><div class="line">  <span class="attr">output</span>: &#123;</div><div class="line">    <span class="attr">path</span>: PATHS.build,</div><div class="line">    <span class="attr">filename</span>: <span class="string">'[name].js'</span>,</div><div class="line">  &#125;,</div><div class="line">  <span class="attr">plugins</span>: [</div><div class="line">    <span class="keyword">new</span> HtmlWebpackPlugin(&#123;</div><div class="line">      <span class="attr">title</span>: <span class="string">'Webpack demo'</span>,</div><div class="line">    &#125;),</div><div class="line">  ],</div><div class="line">&#125;;</div><div class="line"></div><div class="line"><span class="built_in">module</span>.exports = <span class="function">(<span class="params">env</span>) =&gt;</span> &#123;</div><div class="line">    <span class="built_in">console</span>.log(env);</div><div class="line"></div><div class="line">    <span class="keyword">return</span> commonConfig;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p> 运行 npm start 任务： <code>&quot;start&quot;: &quot;webpack-dev-server --env development&quot;,</code> 控制台会输出 <code>development</code> 值。</p>
+<p> 传入webpack配置文件的env对象可以是对象类型，如当我们执行 npm build: <code>&quot;build&quot;: &quot;webpack --env.target production&quot;</code> 的时候，控制台会输出<code>{ target: &#39;production&#39; }</code>。 也就是说我们可以给env 设置多个值。webpack 底层是依赖 <a href="http://yargs.js.org/docs/#parsing-tricks-dot-notation" target="_blank" rel="external">yargs</a>。webpack2 相对于webpack1 不允许通过CLI传自定义的参数了，建议都是通过–env来传递。</p>
+</li>
+<li><p><code>http://localhost:8080/webpack-dev-server/</code>  可以查看webpack-dev-server 的状态。</p>
+</li>
+<li><p><a href="https://www.npmjs.com/package/dotenv" target="_blank" rel="external">dotenv </a> 可以通过.env 文件方便来定义环境变量。</p>
+</li>
+<li><p>webpack-dev-server 可以监控文件改动自动重启，但是如果改动了webpack.config.js 文件不在监控范围内。我们可以使用<code>nodemon</code>来监控我们的配置文件。</p>
+<p> 先安装nodemon: <code>npm install --save-dev nodemon</code>.<br> npm 脚本： <code>&quot;start&quot;: &quot;nodemon --watch webpack.config.js --exec \&quot;webpack-dev-server --env development\&quot;&quot;</code></p>
+</li>
+<li><p><code>[webpack-merge](https://www.npmjs.org/package/webpack-merge)</code> 用于拼接数组，而不是覆盖。 用于细分配置，通过组合的方式来组合不同环境下的配置文件。</p>
+ <figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">&gt; merge = <span class="built_in">require</span>(<span class="string">'webpack-merge'</span>)</div><div class="line">...</div><div class="line">&gt; merge(</div><div class="line">... &#123; <span class="attr">a</span>: [<span class="number">1</span>], <span class="attr">b</span>: <span class="number">5</span>, <span class="attr">c</span>: <span class="number">20</span> &#125;,</div><div class="line">... &#123; <span class="attr">a</span>: [<span class="number">2</span>], <span class="attr">b</span>: <span class="number">10</span>, <span class="attr">d</span>: <span class="number">421</span> &#125;</div><div class="line">... )</div><div class="line">&#123; <span class="attr">a</span>: [ <span class="number">1</span>, <span class="number">2</span> ], <span class="attr">b</span>: <span class="number">10</span>, <span class="attr">c</span>: <span class="number">20</span>, <span class="attr">d</span>: <span class="number">421</span> &#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p>css-loader默认是处理相对路径的，但是不会处理绝对路径(url(‘/static/img/demo.png’)。 如果需要支持这种方式，必须把文件复制到项目中。可以使用<a href="https://www.npmjs.com/package/copy-webpack-plugin" target="_blank" rel="external">copy-webpack-plugin</a> 来实现。同样你可以手动复制过来，但是使用copy-webpack-plugin的方式webpack-dev-server 可以识别。</p>
+</li>
+<li><p>如果想在css-loader 中以其他的方式处理import，那么需要设置importLoaders 属性告诉css loader当碰到import后面有多少个loader需要处理。</p>
+<p> 比如在css文件中引入了一个sass文件。</p>
+ <figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">@<span class="keyword">import</span> <span class="string">"./variables.sass"</span>;</div></pre></td></tr></table></figure>
+<p> 处理这个sass文件，需要这么配置。</p>
+ <figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">&#123;</div><div class="line">  <span class="attr">test</span>: <span class="regexp">/\.css$/</span>,</div><div class="line">  <span class="attr">use</span>: [</div><div class="line">    <span class="string">'style-loader'</span>,</div><div class="line">    &#123;</div><div class="line">      <span class="attr">loader</span>: <span class="string">'css-loader'</span>,</div><div class="line">      <span class="attr">options</span>: &#123;</div><div class="line">        <span class="attr">importLoaders</span>: <span class="number">1</span>,</div><div class="line">      &#125;,</div><div class="line">    &#125;,</div><div class="line">    <span class="string">'sass-loader'</span>,</div><div class="line">  ],</div><div class="line">&#125;,</div></pre></td></tr></table></figure>
+<p> 如果添加了更多的loader，像： postcss-loader,那么需要调整importLoaders 为2.</p>
+</li>
+<li><p>去除未使用的css。 使用<a href="https://www.npmjs.com/package/purifycss" target="_blank" rel="external">PurifyCSS</a>来实现。</p>
+<p> 测试使用了purecss。在index.js 中引入</p>
+ <figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> <span class="string">'purecss'</span>;</div></pre></td></tr></table></figure>
+<p> component.js 中使用到purecss的一个样式：</p>
+ <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">export default (text = &apos;Hello world&apos;) =&gt; &#123;</div><div class="line">  const element = document.createElement(&apos;div&apos;);</div><div class="line">  element.className = &apos;pure-button&apos;;</div><div class="line"></div><div class="line">  element.innerHTML = text;</div><div class="line"></div><div class="line">  return element;</div><div class="line">&#125;;</div></pre></td></tr></table></figure>
+<p> 运行<code>npm run build</code> 打包后的 app.css 大小是17kb，把pure.css都包含进来了。</p>
+<p> 使用purifyCSS：<br> 1) 安装： <code>npm install glob purifycss-webpack purify-css --save-dev</code><br> 2) 引入：</p>
+ <figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> PurifyCSSPlugin = <span class="built_in">require</span>(<span class="string">'purifycss-webpack'</span>);</div><div class="line"></div><div class="line"></div><div class="line">...</div><div class="line"></div><div class="line"></div><div class="line">exports.purifyCSS = <span class="function">(<span class="params">&#123; paths &#125;</span>) =&gt;</span> (&#123;</div><div class="line">  <span class="attr">plugins</span>: [</div><div class="line">    <span class="keyword">new</span> PurifyCSSPlugin(&#123; paths &#125;),</div><div class="line">  ],</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p> 注意： 这个插件必须是在 ExtractTextPlugin 插件之后，不然不起作用。</p>
+<p> 3). 使用：</p>
+ <figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> glob = <span class="built_in">require</span>(<span class="string">'glob'</span>);</div><div class="line"></div><div class="line"><span class="keyword">const</span> parts = <span class="built_in">require</span>(<span class="string">'./webpack.parts'</span>);</div><div class="line">...</div><div class="line"></div><div class="line">const productionConfig = merge([</div><div class="line">  ...</div><div class="line"></div><div class="line">  parts.purifyCSS(&#123;</div><div class="line">    <span class="attr">paths</span>: glob.sync(<span class="string">`<span class="subst">$&#123;PATHS.app&#125;</span>/**/*.js`</span>, &#123; <span class="attr">nodir</span>: <span class="literal">true</span> &#125;),</div><div class="line">  &#125;),</div><div class="line"></div><div class="line">]);</div></pre></td></tr></table></figure>
+<p> 此时app.css 只有3kb大小。这对于一些大的ui库来说，还是很有用的。使用purifyCSS 会丢失source map的功能。</p>
+</li>
+<li><p><a href="https://www.npmjs.com/package/isomorphic-style-loader" target="_blank" rel="external">isomorphic-style-loader</a>可以用来优化<a href="https://developers.google.com/web/fundamentals/performance/critical-rendering-path/" target="_blank" rel="external">关键渲染路径</a>。优化关键渲染路径是指优先显示与当前用户操作有关的内容。可以用来提升网站的性能。</p>
+</li>
+<li><p><a href="http://stylelint.io/" target="_blank" rel="external">Stylelint</a> 可以用来统一我们的css代码风格。 scss 使用<a href="https://www.npmjs.com/package/stylelint-scss" target="_blank" rel="external">stylelint-scss</a>。也可以使用<a href="https://www.npmjs.com/package/stylelint-webpack-plugin" target="_blank" rel="external">stylelint-webpack-plugin</a> 来实现相同的功能。</p>
+</li>
+<li><p>webpack loader的加载顺序是从右至左，从下往上的。 比如：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">&#123;</div><div class="line">  <span class="attr">test</span>: <span class="regexp">/\.css$/</span>,</div><div class="line">  <span class="attr">use</span>: [<span class="string">'style-loader'</span>, <span class="string">'css-loader'</span>],</div><div class="line">&#125;,</div></pre></td></tr></table></figure>
+<p>等同于</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">&#123;</div><div class="line">  <span class="attr">test</span>: <span class="regexp">/\.css$/</span>,</div><div class="line">  <span class="attr">use</span>: [<span class="string">'style-loader'</span>],</div><div class="line">&#125;,</div><div class="line">&#123;</div><div class="line">  <span class="attr">test</span>: <span class="regexp">/\.css$/</span>,</div><div class="line">  <span class="attr">use</span>: [<span class="string">'css-loader'</span>],</div><div class="line">&#125;,</div></pre></td></tr></table></figure>
+<p>rules 的enforce属性可以跳出这种限制，</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">&#123;</div><div class="line">  <span class="comment">// Conditions</span></div><div class="line">  test: <span class="regexp">/\.js$/</span>,</div><div class="line">  <span class="attr">enforce</span>: <span class="string">'pre'</span>, <span class="comment">// 'post' too</span></div><div class="line"></div><div class="line">  <span class="comment">// Actions</span></div><div class="line">  loader: <span class="string">'eslint-loader'</span>,</div><div class="line">&#125;,</div></pre></td></tr></table></figure>
+<p>enforce 设置pre 可以在其他loader执行之前执行。post 则是在build source之后。</p>
+</li>
+<li><p>给loader设置参数，推荐使用options的方式来：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">&#123;</div><div class="line">  <span class="comment">// Conditions</span></div><div class="line">  test: <span class="regexp">/\.js$/</span>,</div><div class="line">  <span class="attr">include</span>: PATHS.app,</div><div class="line"></div><div class="line">  <span class="comment">// Actions</span></div><div class="line">  loader: <span class="string">'babel-loader'</span>,</div><div class="line">  <span class="attr">options</span>: &#123;</div><div class="line">    <span class="attr">cacheDirectory</span>: <span class="literal">true</span>,</div><div class="line">    <span class="attr">presets</span>: [<span class="string">'react'</span>, <span class="string">'es2015'</span>],</div><div class="line">  &#125;,</div><div class="line">&#125;,</div></pre></td></tr></table></figure>
+<p>或者使用use：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">&#123;</div><div class="line">  <span class="comment">// Conditions</span></div><div class="line">  test: <span class="regexp">/\.js$/</span>,</div><div class="line">  <span class="attr">include</span>: PATHS.app,</div><div class="line"></div><div class="line">  <span class="comment">// Actions</span></div><div class="line">  use: &#123;</div><div class="line">    <span class="attr">loader</span>: <span class="string">'babel-loader'</span>,</div><div class="line">    <span class="attr">options</span>: &#123;</div><div class="line">      <span class="attr">cacheDirectory</span>: <span class="literal">true</span>,</div><div class="line">      <span class="attr">presets</span>: [<span class="string">'react'</span>, <span class="string">'es2015'</span>],</div><div class="line">    &#125;,</div><div class="line">  &#125;,</div><div class="line">&#125;,</div></pre></td></tr></table></figure>
+<p>如果需要设置多个loader的参数：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">&#123;</div><div class="line">  <span class="attr">test</span>: <span class="regexp">/\.js$/</span>,</div><div class="line">  <span class="attr">include</span>: PATHS.app,</div><div class="line"></div><div class="line">  <span class="attr">use</span>: [</div><div class="line">    &#123;</div><div class="line">      <span class="attr">loader</span>: <span class="string">'babel-loader'</span>,</div><div class="line">      <span class="attr">options</span>: &#123;</div><div class="line">        <span class="attr">cacheDirectory</span>: <span class="literal">true</span>,</div><div class="line">        <span class="attr">presets</span>: [<span class="string">'react'</span>, <span class="string">'es2015'</span>],</div><div class="line">      &#125;,</div><div class="line">    &#125;,</div><div class="line">    <span class="comment">// Add more loaders here</span></div><div class="line">  ],</div><div class="line">&#125;,</div></pre></td></tr></table></figure>
+</li>
+<li><p>webpack不允许任意多个的options配置，可以使用LoaderOptionsPlugin 来解决这个问题。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">plugins: [</div><div class="line">  <span class="keyword">new</span> webpack.LoaderOptionsPlugin(&#123;</div><div class="line">    <span class="attr">sassLoader</span>: &#123;</div><div class="line">      <span class="attr">includePaths</span>: [</div><div class="line">        path.join(__dirname, <span class="string">'style'</span>),</div><div class="line">      ],</div><div class="line">    &#125;,</div><div class="line">  &#125;),</div><div class="line">],</div></pre></td></tr></table></figure>
+</li>
+<li><p><a href="https://www.npmjs.com/package/webpack-spritesmith" target="_blank" rel="external">webpack-spritesmith</a> 可以用来合成雪碧图。需要先使用<code>SpritesmithPlugin</code>插件，生成雪碧文件，在使用。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">@<span class="keyword">import</span> <span class="string">'~sprite.sass'</span>;</div><div class="line"></div><div class="line">.close-button &#123;</div><div class="line">  sprite($close);</div><div class="line">&#125;</div><div class="line"></div><div class="line">.open-button &#123;</div><div class="line">  sprite($open);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p>如果使用了images 和css-loader 的sourcemap选项，必须设置<code>output.publicPaht</code>为服务器上的绝对路径，不然images不会生效。</p>
+</li>
+<li><p>有时候我们的应用可能有多个entry文件，引用的公共库文件可以给每个entry文件生成单独的公共文件。比如说有一个login和app的entry。</p>
+<p>可以如下配置：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> config = &#123;</div><div class="line">  ...</div><div class="line">  plugins: [</div><div class="line">    <span class="keyword">new</span> webpack.optimize.CommonsChunkPlugin(&#123;</div><div class="line">      <span class="attr">name</span>: <span class="string">'login'</span>,</div><div class="line">      <span class="attr">chunks</span>: [<span class="string">'login'</span>],</div><div class="line">      <span class="attr">minChunks</span>: isVendor,</div><div class="line">    &#125;),</div><div class="line">    <span class="keyword">new</span> webpack.optimize.CommonsChunkPlugin(&#123;</div><div class="line">      <span class="attr">name</span>: <span class="string">'vendor'</span>,</div><div class="line">      <span class="attr">chunks</span>: [<span class="string">'app'</span>],</div><div class="line">      <span class="attr">minChunks</span>: isVendor,</div><div class="line">    &#125;),</div><div class="line">    <span class="comment">// Extract chunks common to both app and login</span></div><div class="line">    <span class="keyword">new</span> webpack.optimize.CommonsChunkPlugin(&#123;</div><div class="line">      <span class="attr">name</span>: <span class="string">'common'</span>,</div><div class="line">      <span class="attr">chunks</span>: [<span class="string">'login'</span>, <span class="string">'app'</span>],</div><div class="line">      <span class="attr">minChunks</span>: <span class="function">(<span class="params"><span class="built_in">module</span>, count</span>) =&gt;</span> count &gt;= <span class="number">2</span> &amp;&amp; isVendor(<span class="built_in">module</span>),</div><div class="line">    &#125;),</div><div class="line">  ],</div><div class="line">  ...</div><div class="line">&#125;;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">isVendor</span>(<span class="params">&#123; resource &#125;</span>) </span>&#123;</div><div class="line">  <span class="keyword">return</span> resource &amp;&amp;</div><div class="line">    resource.indexOf(<span class="string">'node_modules'</span>) &gt;= <span class="number">0</span> &amp;&amp;</div><div class="line">    resource.match(<span class="regexp">/\.js$/</span>);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p>webpack 清除构建目录插件<a href="https://www.npmjs.com/package/clean-webpack-plugin" target="_blank" rel="external">clean-webpack-plugin</a>。 在每次构建前，先清空构建目录。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> CleanWebpackPlugin = <span class="built_in">require</span>(<span class="string">'clean-webpack-plugin'</span>);</div><div class="line"></div><div class="line">...</div><div class="line"></div><div class="line">exports.clean = <span class="function">(<span class="params">path</span>) =&gt;</span> (&#123;</div><div class="line">  <span class="attr">plugins</span>: [</div><div class="line">    <span class="keyword">new</span> CleanWebpackPlugin([path]),</div><div class="line">  ],</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> productionConfig = merge([</div><div class="line"></div><div class="line">  parts.clean(PATHS.build),</div><div class="line"></div><div class="line">  ...</div><div class="line">]);</div></pre></td></tr></table></figure>
+</li>
+<li><p>给build文件添加git版本信息。可以使用<a href="https://webpack.js.org/plugins/banner-plugin/" target="_blank" rel="external">webpack.BannerPlugin</a> 和<a href="https://www.npmjs.com/package/git-revision-webpack-plugin" target="_blank" rel="external">git-revision-webpack-plugin</a>来实现。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"></div><div class="line"><span class="keyword">const</span> GitRevisionPlugin = <span class="built_in">require</span>(<span class="string">'git-revision-webpack-plugin'</span>);</div><div class="line"></div><div class="line">exports.attachRevision = <span class="function"><span class="params">()</span> =&gt;</span> (&#123;</div><div class="line">  <span class="attr">plugins</span>: [</div><div class="line">    <span class="keyword">new</span> webpack.BannerPlugin(&#123;</div><div class="line">      <span class="attr">banner</span>: <span class="keyword">new</span> GitRevisionPlugin().version(),</div><div class="line">    &#125;),</div><div class="line">  ],</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> productionConfig = merge([</div><div class="line">  ...</div><div class="line"></div><div class="line">  parts.attachRevision(),</div><div class="line"></div><div class="line">]);</div></pre></td></tr></table></figure>
+<p>这样会在每个build的文件第一行添加了git的版本信息如：<code>/*! 45a755e */</code></p>
+</li>
+<li><p>webpack 默认对使用了ES6 module使用了tree shaking。 但是如果想对外部的包也使用tree shaking,可以使用<a href="https://www.npmjs.com/package/babel-plugin-transform-imports" target="_blank" rel="external">babel-plugin-transform-imports </a>重写import来适配webpack的tree shaking逻辑。</p>
+</li>
+</ol>
+<p>ps: <code>library</code> 和 <code>libraryTarget</code> 的作用：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">output: &#123;</div><div class="line">      <span class="attr">path</span>: PATHS.build,</div><div class="line">      <span class="attr">library</span>: <span class="string">'demo'</span>,</div><div class="line">      <span class="attr">libraryTarget</span>: <span class="string">'var'</span>,</div><div class="line">    &#125;,</div></pre></td></tr></table></figure>
+<p>会生成：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> Demo =</div><div class="line"><span class="comment">/******/</span> (<span class="function"><span class="keyword">function</span>(<span class="params">modules</span>) </span>&#123; <span class="comment">// webpackBootstrap</span></div><div class="line">...</div><div class="line"><span class="comment">/******/</span> &#125;)</div><div class="line">...</div><div class="line"><span class="comment">/******/</span> ([</div><div class="line">  ...</div><div class="line"><span class="comment">/******/</span> ]);</div></pre></td></tr></table></figure>
+<p>也就是产生<code>var &lt;output.library&gt; = &lt;webpack bootstrap&gt;</code> 这样的代码。libraryTarget 还有其他的值<code>window</code>=&gt;<code>window[&quot;demo&quot;]</code>, <code>global</code>=&gt;<code>global[&quot;demo&quot;]</code>,<code>assign</code>=&gt; demo = , <code>this</code>=&gt;<code>this[&quot;demo&quot;]</code>.<code>commonjs</code>=&gt;<code>exports[&quot;demo&quot;]=</code>, <code>commonjs2</code>=&gt;<code>module.exports=</code>,<code>amd</code>=&gt;</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">define(<span class="string">"Demo"</span>, [], <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123; <span class="keyword">return</span> <span class="comment">/******/</span> (<span class="function"><span class="keyword">function</span>(<span class="params">modules</span>) </span>&#123; <span class="comment">// webpackBootstrap</span></div><div class="line">...</div></pre></td></tr></table></figure>
+<p><code>umd</code>=&gt;</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">(<span class="function"><span class="keyword">function</span> <span class="title">webpackUniversalModuleDefinition</span>(<span class="params">root, factory</span>) </span>&#123;</div><div class="line">  <span class="keyword">if</span>(<span class="keyword">typeof</span> exports === <span class="string">'object'</span> &amp;&amp; <span class="keyword">typeof</span> <span class="built_in">module</span> === <span class="string">'object'</span>)</div><div class="line">    <span class="built_in">module</span>.exports = factory();</div><div class="line">  <span class="keyword">else</span> <span class="keyword">if</span>(<span class="keyword">typeof</span> define === <span class="string">'function'</span> &amp;&amp; define.amd)</div><div class="line">    define(<span class="string">"Demo"</span>, [], factory);</div><div class="line">  <span class="keyword">else</span> <span class="keyword">if</span>(<span class="keyword">typeof</span> exports === <span class="string">'object'</span>)</div><div class="line">    exports[<span class="string">"Demo"</span>] = factory();</div><div class="line">  <span class="keyword">else</span></div><div class="line">    root[<span class="string">"Demo"</span>] = factory();</div><div class="line">&#125;)(<span class="keyword">this</span>, <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div></pre></td></tr></table></figure>
+<p><code>jsonp</code>=&gt;</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">Demo(<span class="comment">/******/</span> (<span class="function"><span class="keyword">function</span>(<span class="params">modules</span>) </span>&#123; <span class="comment">// webpackBootstrap</span></div></pre></td></tr></table></figure>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://rhain.me/2017/10/19/2017/write-flat-code/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="rhain">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Rhain's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2017/10/19/2017/write-flat-code/" itemprop="url">书写易读代码</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-10-19T09:49:54+08:00">
+                2017-10-19
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>函数式编程有非常陡的学习曲线。相对于命令式编程有很多新的概念，像<code>composition, identities, functors, monads, contravariants</code> 等等。想要把函数式编程融入到日常的开发中，还是有点难度的，特别是对于习惯了命令式编程的人来说。</p>
+<p>但是函数式编程的好处是让你书写声明式的代码：描述你做什么，而不是描述你怎么做的。这就意味着你可以很容易的理解一段代码是干什么的，而不需要去了解它是怎么实现的。</p>
+<p>书写易读的代码不正式我们程序员所追求的么？</p>
+<p>那么我们如何在平常写代码的时候声明式的去写代码呢。</p>
+<p>就拿循环来说。命令式的循环写法：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"></div><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">loop</span>(<span class="params">arr</span>) </span>&#123;</div><div class="line">    <span class="keyword">for</span>(<span class="keyword">let</span> i = <span class="number">1</span>; i &lt; arr.length; i++)&#123;</div><div class="line">        arr[i] *= <span class="number">2</span>;</div><div class="line">        <span class="keyword">if</span>(arr[i] % <span class="number">2</span> === <span class="number">0</span>)&#123;</div><div class="line">            doSomething(arr[i]);</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>上面的代码做了啥？ 从数组第二个元素开始，每个元素乘2，如果正好可以被2 整除则在单独处理。在处理过程中，原数组也被修改了，这可能是你并不想要的因为这个数组可能在其他地方也需要使用。而且，这段代码第一眼是比较难理解的，它是使用命令式的方式来写的。我们很容易使用声明式的方式来重写这段代码。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">loop</span>(<span class="params">arr</span>)</span>&#123;</div><div class="line">    <span class="keyword">const</span> evenNumbers = n &gt; n % <span class="number">2</span> === <span class="number">0</span>;</div><div class="line">    arr.slice(<span class="number">1</span>)</div><div class="line">        .map(<span class="function"><span class="params">v</span> =&gt;</span> v * <span class="number">2</span>)</div><div class="line">        .filter(evenNumbers)</div><div class="line">        .forEach(<span class="function"><span class="params">v</span> =&gt;</span> doSomething(v))</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>上面的代码就从函数名就可以知道代码做了啥，我也不需要它是如何实现的。同时也不会修改原数组，不会引入副作用。</p>
+<p>在来一个列子，从json数组中获取数据，有json 数据如下：<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">[</div><div class="line">    &#123;</div><div class="line">        <span class="string">"country"</span>: <span class="string">"NL"</span>,</div><div class="line">        <span class="string">"points"</span>: <span class="number">12</span></div><div class="line">    &#125;,</div><div class="line">    &#123;</div><div class="line">        <span class="string">"country"</span>: <span class="string">"BE"</span>,</div><div class="line">        <span class="string">"points"</span>: <span class="number">3</span></div><div class="line">    &#125;,</div><div class="line">    &#123;</div><div class="line">        <span class="string">"country"</span>: <span class="string">"NL"</span>,</div><div class="line">        <span class="string">"points"</span>: <span class="number">0</span></div><div class="line">    &#125;,</div><div class="line">    ...</div><div class="line">]</div></pre></td></tr></table></figure></p>
+<p>如果我要计算NL的分数。使用命令式的方式可能是这样写：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">count</span>(<span class="params">votes</span>)</span>&#123;</div><div class="line">    <span class="keyword">let</span> score = <span class="number">0</span>;</div><div class="line">    <span class="keyword">for</span>(<span class="keyword">let</span> i = <span class="number">0</span>;i &lt; votes.length; i++)&#123;</div><div class="line">        <span class="keyword">if</span>(votes[i].country === <span class="string">'NL'</span>)&#123;</div><div class="line">            score += vote[i].points;</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">return</span> score;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>使用声明式的方式来重写：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">count</span>(<span class="params">votes</span>)</span>&#123;</div><div class="line">    <span class="keyword">const</span> sum = <span class="function">(<span class="params">a, b</span>) =&gt;</span> a + b;</div><div class="line">    votes.filter(<span class="function"><span class="params">v</span> =&gt;</span> v.country === <span class="string">'NL'</span>)</div><div class="line">          .map(<span class="function"><span class="params">vote</span> =&gt;</span> vote.points)</div><div class="line">          .reduce(sum);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>还有就是我们在写if else的时候可以使用三元操作符来提升我们的代码可阅读行。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span>(condition)&#123;</div><div class="line">    doSomething1();</div><div class="line">&#125;<span class="keyword">else</span>&#123;</div><div class="line">    doSomething2();</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="keyword">const</span> value = condition ? doSomething1() :  doSomething2();</div></pre></td></tr></table></figure>
+<p>比如说我们有一个这样的判断判断元素是否在可视区域内：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> box = element.getBoundingClientRect();</div><div class="line"></div><div class="line"><span class="keyword">if</span> (box.top - <span class="built_in">document</span>.body.scrollTop &gt; <span class="number">0</span> &amp;&amp; box.bottom - <span class="built_in">document</span>.body.scrollTop &lt; <span class="built_in">window</span>.innerHeight) &#123;</div><div class="line">    reveal();</div><div class="line">&#125; <span class="keyword">else</span> &#123;</div><div class="line">    hide();</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>如果换成三元符则可以重构成：<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> box = element.getBoundingClientRect();</div><div class="line"><span class="keyword">const</span> isInViewport =</div><div class="line">    box.top - <span class="built_in">document</span>.body.scrollTop &gt; <span class="number">0</span> &amp;&amp;</div><div class="line">    box.bottom - <span class="built_in">document</span>.body.scrollTop &lt; <span class="built_in">window</span>.innerHeight;</div><div class="line"></div><div class="line">isInViewport ? reveal() : hide();</div></pre></td></tr></table></figure></p>
+<p>代码可读性提升了一个档次。</p>
+<p>在开看下如果是判断多个元素，命令式写法：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">elements</div><div class="line">    .forEach(<span class="function"><span class="params">element</span> =&gt;</span> &#123;</div><div class="line"></div><div class="line">        <span class="keyword">const</span> box = element.getBoundingClientRect();</div><div class="line"></div><div class="line">        <span class="keyword">if</span> (box.top - <span class="built_in">document</span>.body.scrollTop &gt; <span class="number">0</span> &amp;&amp; box.bottom - <span class="built_in">document</span>.body.scrollTop &lt; <span class="built_in">window</span>.innerHeight) &#123;</div><div class="line">            reveal();</div><div class="line">        &#125; <span class="keyword">else</span> &#123;</div><div class="line">            hide();</div><div class="line">        &#125;</div><div class="line"></div><div class="line">    &#125;);</div></pre></td></tr></table></figure>
+<p>重构成声明式写法：<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> isInViewport = <span class="function"><span class="params">element</span> =&gt;</span> &#123;</div><div class="line">    <span class="keyword">const</span> box = element.getBoundingClientRect();</div><div class="line">    <span class="keyword">const</span> topInViewport = box.top - <span class="built_in">document</span>.body.scrollTop &gt; <span class="number">0</span>;</div><div class="line">    <span class="keyword">const</span> bottomInViewport = box.bottom - <span class="built_in">document</span>.body.scrollTop &lt; <span class="built_in">window</span>.innerHeight;</div><div class="line">    <span class="keyword">return</span> topInViewport &amp;&amp; bottomInViewport;</div><div class="line">&#125;;</div><div class="line"></div><div class="line">elements</div><div class="line">    .forEach(<span class="function"><span class="params">elem</span> =&gt;</span> isInViewport(elem) ? reveal() : hide());</div></pre></td></tr></table></figure></p>
+<p>那么isInViewport 则可以很容易抽成一个util方法了。<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> &#123; isInViewport &#125; <span class="keyword">from</span> <span class="string">'helpers'</span>;</div><div class="line"></div><div class="line">elements</div><div class="line">    .forEach(<span class="function"><span class="params">elem</span> =&gt;</span> isInViewport(elem) ? reveal() : hide());</div></pre></td></tr></table></figure></p>
+<p>可以看到采用声明式的思想来写代码可以写出非常易懂的代码。不过这也有所局限，目前的例子都是基于Array的提供的方法来做的。当然js也是可以函数式来编程的。不过大部分的开发还是采用命令式来写代码的，不过在写命令式的时候可以多想想融入函数式的思想，把自己写的代码很容易让别人看懂，这就很不一样了。</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://rhain.me/2017/09/29/2017/svg-clip-path-logo-colour/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="rhain">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Rhain's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2017/09/29/2017/svg-clip-path-logo-colour/" itemprop="url">svg logo 跟随背景色变化而变化</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-09-29T10:21:04+08:00">
+                2017-09-29
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <blockquote>
+<p><a href="https://eduardoboucas.com/blog/2017/09/25/svg-clip-path-logo-colour.html" target="_blank" rel="external">svg-clip-path-logo-colour</a></p>
+</blockquote>
+<p>原文本来是通过计算每个区域的logo元素来实现，logo跟随背景色变化。但是在safari上表现不好。改用了svg来实现。</p>
+<p>实现方法是使用两个重叠的svg logo，计算上下两个区域logo展示的高度，根据这个高度设置每个svg的mask的高度，让svg logo正好只显示在该区域中。</p>
+<p>不过评论中也提到过<a href="http://aerolab.github.io/midnight.js/" target="_blank" rel="external">midnight.js</a> 的jquery插件可以更加炫酷的实现这种效果。</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://rhain.me/2017/09/22/2017/custom-webfont/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="rhain">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Rhain's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2017/09/22/2017/custom-webfont/" itemprop="url">自定义字体实践</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-09-22T14:20:41+08:00">
+                2017-09-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>我们在开发网页的时候，很多时候会使用字体图标，比如说现在很流行的fontawesome。使用字体图标的好处有很多，在这就不再赘述了。</p>
+<p>但是我们经常会碰到一个问题： 引入的字体图标不够用了，想要找到一个符合意思的图标，在图标库中并没有。 这时候我们可能会使用图片，一般的做法就是把需要用到的图标合成sprite来使用。相对来说会比较繁琐。那我们为何不扩充字体图标库，通过自定义字体来扩充我们的图标库呢？</p>
+<p>我们目前开发中也正好碰到有这样的需求，需要自定义字体库。</p>
+<p>采用<a href="https://github.com/itgalaxy/webfont" target="_blank" rel="external">webfont</a> 来生成我们的自定义字体。不过我们有一个比较特殊的需求是，4个系统，都需要使用同一个字体以便于维护。同时，不能在修改了字体文件后，都单独复制到每个系统中，或者每次都修改每个系统的字体引入的路径。 同时由于浏览器缓存的存在，我们需要采用文件名+hash（如：font.sbcsd2.ttf）的方式来避免覆盖式替换。</p>
+<p>我们的解决方案是 在生成字体文件的时候，同时生成一个json文件包含了最新生成的文件的hash值， 发布到线上。4个业务系统在构建发布的时候请求最新字体文件hash值的json，替换html中字体的hash值。</p>
+<p>webfont官网并没有提供一个非常好的例子来说明如何使用。 结合webfont的webpack插件我写了一个可以生成hash值的字体脚本。</p>
+<p>同时采用vue来展示已经收集的字体图标，可以在页面上直观的看到。</p>
+<p>源码参考： <a href="https://github.com/Rhain/rhain.site/tree/master/source/src/custom-webfont" target="_blank" rel="external">custom-webfont</a></p>
+<p>好处是可以减少字体文件的大小。可以随意添加自己的图标。</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://rhain.me/2017/07/24/2017/html-email/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -680,7 +1577,7 @@
 </blockquote>
 <p>从官网介绍来看，我的理解是Snap Animation States更加方便的使用Snap svg 加载svg和制作svg动画。从我的使用体验上来讲，使用起来确实要得心应手。</p>
 <h4 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h4><p>在html文档底部引入<a href="https://cdnjs.com/libraries/snap.svg/0.4.1" target="_blank" rel="external">Snap.svg 0.4.1</a>和snap-animation-states.js。 不需要依赖jquery。</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">&lt;script type=<span class="string">"text/javascript"</span> src=<span class="string">"js/snap.svg.js"</span>&gt;</div><div class="line">&lt;script type="text/javascript" src="js/snap-animation-states.js"&gt;</div></pre></td></tr></table></figure>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">&lt;script type=<span class="string">"text/javascript"</span> src=<span class="string">"js/snap.svg.js"</span>&gt;</div><div class="line"><span class="xml"><span class="tag">&lt;<span class="name">script</span> <span class="attr">type</span>=<span class="string">"text/javascript"</span> <span class="attr">src</span>=<span class="string">"js/snap-animation-states.js"</span>&gt;</span><span class="undefined"></span></span></div></pre></td></tr></table></figure>
 <h4 id="设置html"><a href="#设置html" class="headerlink" title="设置html"></a>设置html</h4><p>svg需要一个容器元素。如下：</p>
 <figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">i</span> <span class="attr">class</span>=<span class="string">"icon-hamburger"</span>&gt;</span><span class="tag">&lt;/<span class="name">i</span>&gt;</span></div><div class="line"><span class="tag">&lt;<span class="name">i</span> <span class="attr">class</span>=<span class="string">"my-svg-selector"</span>&gt;</span><span class="tag">&lt;/<span class="name">i</span>&gt;</span></div></pre></td></tr></table></figure>
 <h4 id="调用插件"><a href="#调用插件" class="headerlink" title="调用插件"></a>调用插件</h4><figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">    SnapStates(&#123; ...schema... &#125;)</div><div class="line">&#125;)();</div></pre></td></tr></table></figure>
@@ -903,519 +1800,13 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://rhain.me/2017/05/17/2017/gooey-page-loader/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="rhain">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Rhain's blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2017/05/17/2017/gooey-page-loader/" itemprop="url">Gooey page loader</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-05-17T20:21:02+08:00">
-                2017-05-17
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h3 id="css-animation-练习-3"><a href="#css-animation-练习-3" class="headerlink" title="css animation 练习 3"></a>css animation 练习 3</h3><p>要实现如下选中的效果：</p>
-<p><img src="/images/2017/gooey-page-loader/gooey.gif" alt=""></p>
-<h4 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h4><ol>
-<li>动画可以分为两部分，前半部分是9个球聚拢的过程，后半部分是9个球分开的过程</li>
-<li>以第一行第二个球为参照点，可以计算出其他8个球的位置，设置<code>position:absolute</code>，通过<code>left</code> <code>top</code>来设置好每个球的位置。</li>
-<li>通过<code>transform</code> 来移动第二行第二个球的位置。后面几个球的比上面的球稍微设置下时间上的延迟，营造水滴慢慢聚拢的效果</li>
-<li>如果只是上面这样实现，单单使用div来模拟球，效果会很生硬，没有给人那种水滴融合分离的感觉。 这就是需要在球容器上使用filter来帮忙处理下。</li>
-</ol>
-<h4 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h4><ol>
-<li>效果都可以通过普通的css 来实现</li>
-</ol>
-<p>具体实现代码见：<a href="https://github.com/Rhain/rhain.site/tree/master/source/src/2017/gooey-page-loader" target="_blank" rel="external">https://github.com/Rhain/rhain.site/tree/master/source/src/2017/gooey-page-loader</a></p>
-<ol>
-<li>注意在球容器的背景设置filter 才会有水滴融合分散的视觉效果。</li>
-</ol>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">.grid&#123;</div><div class="line">    filter: url("#goo");</div><div class="line">&#125;</div><div class="line"></div><div class="line">&lt;svg xmlns="http://www.w3.org/2000/svg" version="1.1"&gt;</div><div class="line">    &lt;defs&gt;</div><div class="line">        &lt;filter id="goo"&gt;</div><div class="line">            &lt;feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur" /&gt;</div><div class="line">            &lt;feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9" result="goo" /&gt;</div><div class="line">            &lt;feComposite in="SourceGraphic" in2="goo" operator="atop"/&gt;</div><div class="line">        &lt;/filter&gt;</div><div class="line">    &lt;/defs&gt;</div><div class="line">&lt;/svg&gt;</div></pre></td></tr></table></figure>
-<h4 id="关键代码"><a href="#关键代码" class="headerlink" title="关键代码"></a>关键代码</h4><figure class="highlight css"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div></pre></td><td class="code"><pre><div class="line"></div><div class="line"><span class="selector-class">.circel-1</span>&#123;</div><div class="line">    <span class="attribute">left</span>: -<span class="number">30px</span>;</div><div class="line">    <span class="attribute">animation</span>: move1 <span class="number">3s</span> infinite <span class="number">0.3s</span>;</div><div class="line">&#125;</div><div class="line"><span class="selector-class">.circel-2</span>&#123;</div><div class="line">    <span class="attribute">animation</span>: move2 <span class="number">3s</span> infinite <span class="number">0.3s</span>;</div><div class="line">&#125;</div><div class="line"><span class="selector-class">.circel-3</span>&#123;</div><div class="line">    <span class="attribute">left</span>: <span class="number">30px</span>;</div><div class="line">    <span class="attribute">animation</span>: move3 <span class="number">3s</span> infinite <span class="number">0.4s</span>;</div><div class="line">&#125;</div><div class="line"></div><div class="line">@<span class="keyword">keyframes</span> move1 &#123;</div><div class="line">    0%, 100%&#123;</div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">translate3d</span>(0, 0, 0);</div><div class="line">    &#125;</div><div class="line">    50%&#123;</div><div class="line">         <span class="attribute">transform</span>: <span class="built_in">translate3d</span>(30px, 30px, 0);</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line">@<span class="keyword">keyframes</span> move2 &#123;</div><div class="line">    0%, 100%&#123;</div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">translate3d</span>(0, 0, 0);</div><div class="line">    &#125;</div><div class="line">    50%&#123;</div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">translate3d</span>(0px, 30px, 0);</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line">@<span class="keyword">keyframes</span> move3 &#123;</div><div class="line">    0%, 100%&#123;</div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">translate3d</span>(0, 0, 0);</div><div class="line">    &#125;</div><div class="line">    50%&#123;</div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">translate3d</span>(-30px, 30px, 0);</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<p>实现代码：<a href="https://github.com/Rhain/rhain.site/tree/master/source/src/2017/raygun" target="_blank" rel="external">中文注释版源码</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://rhain.me/2017/05/16/ping-pong-animation/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="rhain">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Rhain's blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2017/05/16/ping-pong-animation/" itemprop="url">ping pong animation</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-05-16T09:18:22+08:00">
-                2017-05-16
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h3 id="css-animation-练习-2"><a href="#css-animation-练习-2" class="headerlink" title="css animation 练习 2"></a>css animation 练习 2</h3><p>要实现如下选中的效果：</p>
-<p><img src="/images/ping-pong-animation/ping-pong.gif" alt=""></p>
-<h4 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h4><ol>
-<li>主要是分析乒乓球运动的轨迹。 可以分为4步来实现，切分开来如下图所示：</li>
-</ol>
-<p><img src="/images/ping-pong-animation/ball_move.png" alt=""></p>
-<ol>
-<li>根据乒乓球的运动轨迹，可以计算出球拍需要出现的位置。球拍只做上下移动。</li>
-</ol>
-<h4 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h4><ol>
-<li>使用css 的<code>transform</code> 来变换乒乓球和球拍的位置实现。</li>
-</ol>
-<p>具体实现代码见：<a href="https://github.com/Rhain/rhain.site/tree/master/source/src/ping-pong-animation" target="_blank" rel="external">https://github.com/Rhain/rhain.site/tree/master/source/src/ping-pong-animation</a></p>
-<h4 id="关键代码"><a href="#关键代码" class="headerlink" title="关键代码"></a>关键代码</h4><figure class="highlight css"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">@<span class="keyword">keyframes</span> player_one_move &#123;</div><div class="line">    0%, 100%&#123;</div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">translate</span>(0px, 100px);</div><div class="line">    &#125;</div><div class="line">    25% &#123;</div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">translate</span>(0px, 0px);</div><div class="line">    &#125;</div><div class="line">    50% &#123;</div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">translate</span>(0px, 0px);</div><div class="line">    &#125;</div><div class="line">    75%&#123;</div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">translate</span>(0px, 100px);</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line">@<span class="keyword">keyframes</span> player_two_move &#123;</div><div class="line">    0%, 100%&#123;</div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">translate</span>(0px, -50px);</div><div class="line">    &#125;</div><div class="line">    25% &#123;</div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">translate</span>(0px, 10px);</div><div class="line">    &#125;</div><div class="line">    50% &#123;</div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">translate</span>(0px, 0px);</div><div class="line">    &#125;</div><div class="line">    75%&#123;</div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">translate</span>(0px, 50px);</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line">@<span class="keyword">keyframes</span> ball_move &#123;</div><div class="line">    0%, 100% &#123;</div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">translate</span>(-180px, 30px);</div><div class="line">    &#125;</div><div class="line">    25% &#123;</div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">translate</span>(18px, -25px);</div><div class="line">    &#125;</div><div class="line">    50% &#123;</div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">translate</span>(-180px, -55px);</div><div class="line">    &#125;</div><div class="line">    75%&#123;</div><div class="line">        <span class="attribute">transform</span>: <span class="built_in">translate</span>(18px, 15px);</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://rhain.me/2017/05/11/svg-line-morphing-transition/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="rhain">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Rhain's blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2017/05/11/svg-line-morphing-transition/" itemprop="url">svg line morphing transition</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-05-11T16:31:11+08:00">
-                2017-05-11
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h3 id="css-animation-练习（一）"><a href="#css-animation-练习（一）" class="headerlink" title="css animation 练习（一）"></a>css animation 练习（一）</h3><p>要实现如下选中的效果：</p>
-<p><img src="/images/svg-line-morphing-transition/demo.gif" alt=""></p>
-<h4 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h4><p>此处动画可以分割为四部分来实现：</p>
-<ol>
-<li>选中的圆圈先消失</li>
-<li>底部直线展开</li>
-<li>底部直线消失</li>
-<li>新选中的圆圈出现 （3和4 同时进行）</li>
-</ol>
-<p>这里需要注意的点：</p>
-<ol>
-<li>第一步中圆圈消失的方向， 是逆时针，还是顺时针方向，需要根据当前选中的圆圈和将要选中的圆圈来确定。</li>
-<li>第四步中圆圈出现的方向，需要跟直线展开的衔接好。</li>
-<li>底部直线的消失和新选中圆圈的出现应该是同时的</li>
-<li>底部直线展开的方向，和消失的方向是相反的。 也就是说： 展开的时候，是从左往右，那么消失的时候，则应该是从右往左。</li>
-<li>底部直线开始消失时，选中的圆圈开始出现。</li>
-</ol>
-<h4 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h4><ol>
-<li><p>圆圈的动画使用svg 的path 动画来实现非常简单。(不了解的，可以参考 <a href="https://segmentfault.com/a/1190000007811310" target="_blank" rel="external">帅气的SVG路径描边动画 (path animation) 实战应用</a>)同时也需要处理<br>圆圈消失的方向问题,通过<code>scaleY(-1)</code> 来调整。</p>
-</li>
-<li><p>直线动画如果只是展开的话，可以直接使用width的变换。 但是后面还需要消失。 如果是通过width来实现，实现程度上可能会比较复杂，同时动画操作width会引起页面的reflow，对性能也有一定的影响。<br>更好的解决办法则是使用 css 的<code>transfrom: scale</code>来实现。 scaleX 从0 到1 实现展开， scaleX从1到0 实现消失。 通过<code>transform-origin</code> 来控制直线展开和消失的方向。同时<code>transform</code><br>不会引起页面的reflow，性能上有所提升。</p>
-</li>
-</ol>
-<p>具体实现代码见： <a href="https://github.com/Rhain/rhain.site/tree/master/source/src/svg-line-morphing-transition" target="_blank" rel="external">https://github.com/Rhain/rhain.site/tree/master/source/src/svg-line-morphing-transition</a></p>
-<h4 id="关键代码"><a href="#关键代码" class="headerlink" title="关键代码"></a>关键代码</h4><figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line"></div><div class="line"><span class="comment">// 计算动画变换的方向</span></div><div class="line"><span class="keyword">if</span>(getIndex(<span class="keyword">this</span>, thisArray) &gt; getIndex(activeDot, thisArray))&#123;</div><div class="line"></div><div class="line">    dynamicAnimProps.direction = <span class="string">'right'</span>;</div><div class="line"></div><div class="line">    <span class="comment">// 计算直线长度 和直线开始所在的位置</span></div><div class="line">    dynamicAnimProps.straightLine.width = dynamicAnimProps.newLinePos - dynamicAnimProps.oldLinePos + <span class="number">2.5</span>;</div><div class="line">    dynamicAnimProps.straightLine.pos = dynamicAnimProps.oldLinePos + <span class="number">5</span>;</div><div class="line">    dynamicAnimProps.flipCircle = <span class="literal">false</span>;</div><div class="line">    dynamicAnimProps.straightLine.origin = <span class="string">'left'</span>;</div><div class="line">    dynamicAnimProps.translateVal = staticAnimProps.translateVal;</div><div class="line">&#125;<span class="keyword">else</span> &#123; <span class="comment">// 左方向变换</span></div><div class="line">    dynamicAnimProps.direction = <span class="string">"left"</span>;</div><div class="line"></div><div class="line">    <span class="comment">// 计算直线长度 和直线开始所在的位置</span></div><div class="line">    dynamicAnimProps.straightLine.width = -(dynamicAnimProps.newLinePos - dynamicAnimProps.oldLinePos - <span class="number">2.5</span>);</div><div class="line">    dynamicAnimProps.straightLine.pos = dynamicAnimProps.newLinePos + <span class="number">5</span>;</div><div class="line">    dynamicAnimProps.flipCircle = <span class="literal">true</span>;</div><div class="line">    dynamicAnimProps.straightLine.origin = <span class="string">'right'</span>;</div><div class="line">    dynamicAnimProps.translateVal = -staticAnimProps.translateVal;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<p>原文见： <a href="https://www.uiplease.com/post/svg-line-morphing-transition/?utm_campaign=Revue%20newsletter&amp;utm_medium=Newsletter&amp;utm_source=revue" target="_blank" rel="external">svg-line-morphing-transition</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://rhain.me/2017/05/10/hello-world/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="rhain">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Rhain's blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2017/05/10/hello-world/" itemprop="url">Hello World</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-05-10T08:58:43+08:00">
-                2017-05-10
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="external">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="external">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="external">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="external">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo new <span class="string">"My New Post"</span></div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="external">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo server</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="external">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo generate</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="external">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo deploy</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="external">Deployment</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
+  <nav class="pagination">
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right"></i></a>
+  </nav>
+
 
 
           </div>
@@ -1458,7 +1849,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/">
-                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-count">14</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>

@@ -305,7 +305,7 @@
 </blockquote>
 <p>从官网介绍来看，我的理解是Snap Animation States更加方便的使用Snap svg 加载svg和制作svg动画。从我的使用体验上来讲，使用起来确实要得心应手。</p>
 <h4 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h4><p>在html文档底部引入<a href="https://cdnjs.com/libraries/snap.svg/0.4.1" target="_blank" rel="external">Snap.svg 0.4.1</a>和snap-animation-states.js。 不需要依赖jquery。</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">&lt;script type=<span class="string">"text/javascript"</span> src=<span class="string">"js/snap.svg.js"</span>&gt;</div><div class="line">&lt;script type="text/javascript" src="js/snap-animation-states.js"&gt;</div></pre></td></tr></table></figure>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">&lt;script type=<span class="string">"text/javascript"</span> src=<span class="string">"js/snap.svg.js"</span>&gt;</div><div class="line"><span class="xml"><span class="tag">&lt;<span class="name">script</span> <span class="attr">type</span>=<span class="string">"text/javascript"</span> <span class="attr">src</span>=<span class="string">"js/snap-animation-states.js"</span>&gt;</span><span class="undefined"></span></span></div></pre></td></tr></table></figure>
 <h4 id="设置html"><a href="#设置html" class="headerlink" title="设置html"></a>设置html</h4><p>svg需要一个容器元素。如下：</p>
 <figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">i</span> <span class="attr">class</span>=<span class="string">"icon-hamburger"</span>&gt;</span><span class="tag">&lt;/<span class="name">i</span>&gt;</span></div><div class="line"><span class="tag">&lt;<span class="name">i</span> <span class="attr">class</span>=<span class="string">"my-svg-selector"</span>&gt;</span><span class="tag">&lt;/<span class="name">i</span>&gt;</span></div></pre></td></tr></table></figure>
 <h4 id="调用插件"><a href="#调用插件" class="headerlink" title="调用插件"></a>调用插件</h4><figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">    SnapStates(&#123; ...schema... &#125;)</div><div class="line">&#125;)();</div></pre></td></tr></table></figure>
@@ -494,7 +494,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/">
-                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-count">14</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>

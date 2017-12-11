@@ -1,0 +1,684 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1" />
+
+
+
+
+
+
+<meta name="description" content="大部分的建议适用于Chrome Inspector 和Firefox。只记录我不太了解的方式:D.  ‘debugger’.  在代码中插入debugger,Chrome在执行代码的时候会自动停止在当前代码行。也就是说可以快速在编辑器中设置断点，而不用在chrome去找到代码文件设计断点。  123if (thisThing) &amp;#123;    debugger;&amp;#125;  用表格展示对象">
+<meta property="og:type" content="article">
+<meta property="og:title" content="调试javascript小技巧">
+<meta property="og:url" content="http://rhain.me/2017/10/30/2017/javascript-debugging-tips/index.html">
+<meta property="og:site_name" content="Rhain&#39;s blog">
+<meta property="og:description" content="大部分的建议适用于Chrome Inspector 和Firefox。只记录我不太了解的方式:D.  ‘debugger’.  在代码中插入debugger,Chrome在执行代码的时候会自动停止在当前代码行。也就是说可以快速在编辑器中设置断点，而不用在chrome去找到代码文件设计断点。  123if (thisThing) &amp;#123;    debugger;&amp;#125;  用表格展示对象">
+<meta property="og:image" content="http://rhain.me/images/2017/javascript-tips/tips-2.png">
+<meta property="og:image" content="http://rhain.me/images/2017/javascript-tips/tips-3.png">
+<meta property="og:image" content="http://rhain.me/images/2017/javascript-tips/tips-4.png">
+<meta property="og:image" content="http://rhain.me/images/2017/javascript-tips/tip-5.png">
+<meta property="og:image" content="http://rhain.me/images/2017/javascript-tips/tips-6.png">
+<meta property="og:image" content="http://rhain.me/images/2017/javascript-tips/tips-7.png">
+<meta property="og:image" content="http://rhain.me/images/2017/javascript-tips/tips-8.png">
+<meta property="og:updated_time" content="2017-12-11T11:34:36.378Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="调试javascript小技巧">
+<meta name="twitter:description" content="大部分的建议适用于Chrome Inspector 和Firefox。只记录我不太了解的方式:D.  ‘debugger’.  在代码中插入debugger,Chrome在执行代码的时候会自动停止在当前代码行。也就是说可以快速在编辑器中设置断点，而不用在chrome去找到代码文件设计断点。  123if (thisThing) &amp;#123;    debugger;&amp;#125;  用表格展示对象">
+<meta name="twitter:image" content="http://rhain.me/images/2017/javascript-tips/tips-2.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://rhain.me/2017/10/30/2017/javascript-debugging-tips/"/>
+
+
+
+
+
+  <title>调试javascript小技巧 | Rhain's blog</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Rhain's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">rhain 的私语</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://rhain.me/2017/10/30/2017/javascript-debugging-tips/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="rhain">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Rhain's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">调试javascript小技巧</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-10-30T15:13:31+08:00">
+                2017-10-30
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>大部分的建议适用于Chrome Inspector 和Firefox。只记录我不太了解的方式:D.</p>
+<ol>
+<li><p>‘debugger’.</p>
+<p> 在代码中插入<code>debugger</code>,Chrome在执行代码的时候会自动停止在当前代码行。也就是说可以快速在编辑器中设置断点，而不用在chrome去找到代码文件设计断点。</p>
+ <figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> (thisThing) &#123;</div><div class="line">    <span class="keyword">debugger</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p>用表格展示对象<br> 有时候我们有一些非常复杂的对象需要展示，我们可以使用console.log() 展示。但是可以使用console.table来展示，会比console.log更加易读。</p>
+ <figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> animals = [</div><div class="line">    &#123; <span class="attr">animal</span>: <span class="string">'Horse'</span>, <span class="attr">name</span>: <span class="string">'Henry'</span>, <span class="attr">age</span>: <span class="number">43</span> &#125;,</div><div class="line">    &#123; <span class="attr">animal</span>: <span class="string">'Dog'</span>, <span class="attr">name</span>: <span class="string">'Fred'</span>, <span class="attr">age</span>: <span class="number">13</span> &#125;,</div><div class="line">    &#123; <span class="attr">animal</span>: <span class="string">'Cat'</span>, <span class="attr">name</span>: <span class="string">'Frodo'</span>, <span class="attr">age</span>: <span class="number">18</span> &#125;</div><div class="line">];</div><div class="line"></div><div class="line"><span class="built_in">console</span>.table(animals);</div></pre></td></tr></table></figure>
+<p> 会输出：<br> <img src="/images/2017/javascript-tips/tips-2.png" alt=""></p>
+</li>
+<li><p>快速找到DOM元素</p>
+<p> Chrome会把最后5个点击的DOM元素保存到内存中，所以你最后点击的DOM元素，可以通过$0来获取，倒数第二个可以用$1,以此类推。如果你依序点击了下面的DOM节点，‘item-4′, ‘item-3’, ‘item-2’, ‘item-1’, ‘item-0’ ，那么可以在控制台很快速的获取到这5个节点。</p>
+<p> <img src="/images/2017/javascript-tips/tips-3.png" alt=""></p>
+</li>
+<li><p>使用console.time() and console.timeEnd()计算函数执行时间。如果想要一段代码执行的准确时间，可以使用console.time() and console.timeEnd()来实现。</p>
+<p> 如有下面一段代码：</p>
+ <figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">console</span>.time(<span class="string">'Timer1'</span>);</div><div class="line"></div><div class="line"><span class="keyword">var</span> items = [];</div><div class="line"></div><div class="line"><span class="keyword">for</span>(<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; <span class="number">100000</span>; i++)&#123;</div><div class="line">   items.push(&#123;<span class="attr">index</span>: i&#125;);</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="built_in">console</span>.timeEnd(<span class="string">'Timer1'</span>);</div></pre></td></tr></table></figure>
+<p> 会输出：<br> <img src="/images/2017/javascript-tips/tips-4.png" alt=""></p>
+</li>
+<li><p>获取一个函数的堆栈。console.trace() 可以很方便的获取一个函数的函数调用信息。</p>
+<p> 比如有一下代码：</p>
+ <figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> car;</div><div class="line"><span class="keyword">var</span> func1 = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">    func2();</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="keyword">var</span> func2 = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">    func4();</div><div class="line">&#125;</div><div class="line"><span class="keyword">var</span> func3 = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="keyword">var</span> func4 = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">    car = <span class="keyword">new</span> Car();</div><div class="line">    car.funcX();</div><div class="line">&#125;</div><div class="line"><span class="keyword">var</span> Car = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">    <span class="keyword">this</span>.brand = ‘volvo’;</div><div class="line">    <span class="keyword">this</span>.color = ‘red’;</div><div class="line">    <span class="keyword">this</span>.funcX = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">        <span class="keyword">this</span>.funcY();</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">this</span>.funcY = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">        <span class="keyword">this</span>.funcZ();</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">this</span>.funcZ = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">        <span class="built_in">console</span>.trace(‘trace car’)</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line">func1();</div><div class="line"><span class="keyword">var</span> car;</div><div class="line"><span class="keyword">var</span> func1 = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">    func2();</div><div class="line">&#125;</div><div class="line"><span class="keyword">var</span> func2 = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">    func4();</div><div class="line">&#125;</div><div class="line"><span class="keyword">var</span> func3 = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">&#125;</div><div class="line"><span class="keyword">var</span> func4 = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">    car = <span class="keyword">new</span> Car();</div><div class="line">    car.funcX();</div><div class="line">&#125;</div><div class="line"><span class="keyword">var</span> Car = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">    <span class="keyword">this</span>.brand = ‘volvo’;</div><div class="line">    <span class="keyword">this</span>.color = ‘red’;</div><div class="line">    <span class="keyword">this</span>.funcX = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">        <span class="keyword">this</span>.funcY();</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">this</span>.funcY = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">        <span class="keyword">this</span>.funcZ();</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">this</span>.funcZ = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">        <span class="built_in">console</span>.trace(‘trace car’)</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line">func1();</div></pre></td></tr></table></figure>
+<p> 会输出：<br> <img src="/images/2017/javascript-tips/tip-5.png" alt=""></p>
+</li>
+<li><p>快速debug函数</p>
+<p> 一般我们debug函数有两种方法：一是在chrome inspector中到代码设置断点。二是在脚本中添加debugger。</p>
+<p> 但是有一种更加快速的方法。在控制台执行debug(funcName)，脚本执行到这个函数的会将会停下来。不过这个方法不适用在私有和匿名方法。</p>
+<p> 比如有下面的代码：</p>
+ <figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> func1 = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">    func2();</div><div class="line">&#125;;</div><div class="line"></div><div class="line"><span class="keyword">var</span> Car = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">    <span class="keyword">this</span>.funcX = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">        <span class="keyword">this</span>.funcY();</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">this</span>.funcY = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">        <span class="keyword">this</span>.funcZ();</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="keyword">var</span> car = <span class="keyword">new</span> Car();</div></pre></td></tr></table></figure>
+<p> 在控制台输入<code>debug(car.funcY)</code>,当脚本执行到car.func时会进入debug模式。<br> <img src="/images/2017/javascript-tips/tips-6.png" alt=""></p>
+</li>
+<li><p>观察函数调用和传入的参数</p>
+<p> 在Chrome的控制台，我们可以监控一个函数，当它被调用的时候，会记录下来，同时会显示传入的参数值。</p>
+<p> 有这段代码：</p>
+ <figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> func1 = <span class="function"><span class="keyword">function</span>(<span class="params">x, y, z</span>) </span>&#123;</div><div class="line"><span class="comment">//....</span></div><div class="line">&#125;;</div></pre></td></tr></table></figure>
+<p> 会输出：</p>
+<p> <img src="/images/2017/javascript-tips/tips-7.png" alt=""></p>
+<p> 这是一种非常方便的方式用于观察传入函数参数的值。</p>
+</li>
+<li><p>断点DOM 节点变化。</p>
+<p> 有时候DOM的节点的属性改变了，但是我们却不知道为啥。当DOM节点变化的时候，Chrome可以暂时脚本。在Chrome Inspector中右键一个元素，选择一个断点方式。</p>
+<p> <img src="/images/2017/javascript-tips/tips-8.png" alt=""></p>
+<blockquote>
+<p>原文：<a href="https://raygun.com/javascript-debugging-tips" target="_blank" rel="external">javascript-debugging-tips</a></p>
+</blockquote>
+</li>
+</ol>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/10/26/2017/SurviveJS-Webpack/" rel="next" title="surviveJs webpack 阅读笔记">
+                <i class="fa fa-chevron-left"></i> surviveJs webpack 阅读笔记
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/11/21/2017/spring-multi-environment/" rel="prev" title="springmvc 多环境实践">
+                springmvc 多环境实践 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="uyan_frame"></div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview sidebar-panel sidebar-panel-active">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="rhain" />
+          <p class="site-author-name" itemprop="name">rhain</p>
+           
+              <p class="site-description motion-element" itemprop="description">rhain 的私人花园</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/">
+                <span class="site-state-item-count">14</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">rhain</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+    
+
+    
+      <!-- UY BEGIN -->
+      <script type="text/javascript" src="http://v2.uyan.cc/code/uyan.js?uid=2137129"></script>
+      <!-- UY END -->
+    
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
